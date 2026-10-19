@@ -11,6 +11,21 @@
 
 登录凭证每次从最新的 iPhone 备份里读，只放在内存里，不落盘。提示「凭证失效」时，打开一次 App 再重新备份。
 
+## 云端点评 Routine（每天 20:30）
+
+claude.ai 上的 Routine「骑行点评（每天 20:30）」（https://claude.ai/code/routines/trig_01BikyfnZ59PpXYK8A6ivfx6）
+每天北京时间 20:30 在云端运行：克隆本仓库 → `python xds_review.py pending` 拉取新骑行 → 以骑行教练 + 健康医生的角度
+点评「整体 / 爬坡路段 / 无灯路段」→ `python xds_review.py save` 写入点评 → 提交推送回 main。没有新骑行时只在
+`rides/reviews/runs.log` 记一行「无新增」。
+
+- 云端环境 **Personal**：环境变量 `XDS_UID`、`XDS_TOKEN`（喜德盛登录凭证）；网络白名单含 `prdapi.xdsiot.com`、
+  `nominatim.openstreetmap.org`。不能连接任何 claude.ai 连接器。
+- 点评存在 `rides/reviews/<日期>_<id>.json`，汇总在 `rides/reviews/journal.md`；展示页的骑行详情里有「教练点评」卡片。
+- 本机双击 `骑行记录.cmd` 会先 `git pull` 拿到云端的新数据和点评，再生成页面。
+- **凭证失效时**（runs.log 里出现「登录凭证失效」）：手机打开一次 App → 备份 iPhone → 本机运行 `uv run xds_token.py`
+  （token 会复制到剪贴板）→ 粘贴到 Personal 环境的 `XDS_TOKEN`。
+- 本机手动同步（`uv run xds_sync.py`）之后记得 `git commit` + `git push`，否则会和云端的提交冲突。
+
 ## 文件
 
 | 路径 | 内容 |

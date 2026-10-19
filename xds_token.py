@@ -1,5 +1,6 @@
 # /// script
 # requires-python = ">=3.10"
+# dependencies = ["fit-tool"]
 # ///
 """Copy the XDS login from the latest iPhone backup, for the cloud environment's variables.
 
