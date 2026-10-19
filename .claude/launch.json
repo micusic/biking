@@ -1,0 +1,18 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "rides",
+      "runtimeExecutable": "python3.12",
+      "runtimeArgs": ["-m", "http.server", "8765", "--bind", "127.0.0.1", "--directory", "rides"],
+      "port": 8765
+    },
+    {
+      "name": "app",
+      "runtimeExecutable": "uv",
+      "runtimeArgs": ["run", "-q", "xds_app.py"],
+      "env": { "XDS_NO_BROWSER": "1", "PYTHONIOENCODING": "utf-8" },
+      "port": 8770
+    }
+  ]
+}

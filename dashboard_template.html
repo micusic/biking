@@ -1,0 +1,1226 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>骑行记录</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<style>
+:root {
+  color-scheme: light;
+  --page: #f3f3f1; --surface-1: #ffffff; --surface-2: #f3f2ef; --surface-3: #e9e8e3;
+  --text-primary: #18181a; --text-secondary: #52514e; --text-muted: #898781;
+  --grid: #e8e7e1; --axis: #c3c2b7; --border: rgba(11,11,11,0.08);
+  --accent: #eb6834; --accent-soft: rgba(235,104,52,0.12); --accent-ink: #c2521f;
+  --heat-1: #fcd9c6; --heat-2: #f6a77f; --heat-3: #eb6834; --heat-4: #b8461a;
+  --route: #1f4fd1;
+  --speed: #2a78d6; --hr: #e34948; --power: #6250d6; --elev: #898781; --elev-fill: rgba(137,135,129,0.18);
+  --good: #006300; --aqua: #1baf7a;
+  --shadow: 0 1px 2px rgba(0,0,0,0.04), 0 2px 8px rgba(0,0,0,0.04);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --page: #0d0d0d; --surface-1: #1a1a19; --surface-2: #232321; --surface-3: #2c2c2a;
+    --text-primary: #f0efec; --text-secondary: #c3c2b7; --text-muted: #898781;
+    --grid: #2c2c2a; --axis: #383835; --border: rgba(255,255,255,0.08);
+    --accent: #f07a45; --accent-soft: rgba(240,122,69,0.16); --accent-ink: #f59a6f;
+    --heat-1: #4a2414; --heat-2: #8a3a17; --heat-3: #d95926; --heat-4: #f59a6f;
+    --route: #2f5fe0;
+    --speed: #3987e5; --hr: #e66767; --power: #9085e9; --elev: #898781; --elev-fill: rgba(137,135,129,0.22);
+    --good: #0ca30c; --shadow: none; --aqua: #199e70;
+  }
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --page: #0d0d0d; --surface-1: #1a1a19; --surface-2: #232321; --surface-3: #2c2c2a;
+  --text-primary: #f0efec; --text-secondary: #c3c2b7; --text-muted: #898781;
+  --grid: #2c2c2a; --axis: #383835; --border: rgba(255,255,255,0.08);
+  --accent: #f07a45; --accent-soft: rgba(240,122,69,0.16); --accent-ink: #f59a6f;
+  --heat-1: #4a2414; --heat-2: #8a3a17; --heat-3: #d95926; --heat-4: #f59a6f;
+  --route: #2f5fe0;
+  --speed: #3987e5; --hr: #e66767; --power: #9085e9; --elev: #898781; --elev-fill: rgba(137,135,129,0.22);
+  --good: #0ca30c; --shadow: none; --aqua: #199e70;
+}
+* { box-sizing: border-box; }
+html { scroll-padding-top: 72px; }
+body { margin: 0; background: var(--page); color: var(--text-primary);
+  font: 14px/1.5 system-ui, -apple-system, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif; }
+button { font: inherit; color: inherit; }
+.num { font-variant-numeric: tabular-nums; }
+
+/* top bar */
+.topbar { position: sticky; top: 0; z-index: 1100; background: var(--surface-1); border-bottom: 1px solid var(--border); }
+.topbar .in { max-width: 1200px; margin: 0 auto; padding: 0 16px; height: 56px; display: flex; align-items: center; gap: 24px; }
+.brand { display: flex; align-items: center; gap: 8px; font-weight: 700; font-size: 17px; cursor: pointer; }
+.brand svg { color: var(--accent); }
+.nav { display: flex; gap: 4px; flex: 1; }
+.nav a { padding: 6px 12px; border-radius: 8px; color: var(--text-secondary); text-decoration: none; font-weight: 500; }
+.nav a:hover { background: var(--surface-2); }
+.nav a.on { color: var(--text-primary); background: var(--surface-2); }
+.seg { display: inline-flex; background: var(--surface-2); border-radius: 8px; padding: 2px; }
+.seg button { border: 0; background: none; padding: 4px 10px; border-radius: 6px; cursor: pointer; color: var(--text-secondary); font-size: 13px; }
+.seg button.on { background: var(--surface-1); color: var(--text-primary); box-shadow: 0 1px 2px rgba(0,0,0,0.12); }
+
+.page { max-width: 1200px; margin: 0 auto; padding: 20px 16px 64px; }
+.card { background: var(--surface-1); border: 1px solid var(--border); border-radius: 12px; box-shadow: var(--shadow); min-width: 0; }
+.card > .hd { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; padding: 16px 16px 0; }
+.card > .hd h2 { margin: 0; font-size: 15px; font-weight: 650; }
+.card > .hd .aside { color: var(--text-muted); font-size: 12px; }
+.card > .bd { padding: 12px 16px 16px; }
+.linkbtn { border: 0; background: none; padding: 0; color: var(--accent-ink); cursor: pointer; font-size: 13px; }
+.linkbtn:hover { text-decoration: underline; }
+.muted { color: var(--text-muted); }
+.badge { display: inline-block; font-size: 11px; line-height: 18px; padding: 0 6px; border-radius: 4px; background: var(--surface-2); color: var(--text-secondary); font-weight: 500; vertical-align: 2px; }
+.badge.accent { background: var(--accent-soft); color: var(--accent-ink); }
+.badge.warn { background: rgba(250,178,25,0.18); color: #8a5a00; }
+:root[data-theme="dark"] .badge.warn { color: #fab219; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .badge.warn { color: #fab219; } }
+.hrnote { display: flex; gap: 8px; align-items: flex-start; font-size: 13px; color: var(--text-secondary); background: rgba(250,178,25,0.10); border-radius: 8px; padding: 8px 12px; margin: -4px 0 12px; }
+.hrnote b { color: var(--text-primary); }
+
+/* home */
+.home { display: grid; grid-template-columns: 300px minmax(0, 1fr); gap: 16px; align-items: start; }
+.side { display: grid; gap: 16px; position: sticky; top: 76px; }
+.mainc { display: grid; gap: 16px; }
+.year .big { font-size: 40px; font-weight: 700; line-height: 1.1; letter-spacing: -0.5px; }
+.year .big small { font-size: 16px; font-weight: 500; color: var(--text-secondary); margin-left: 4px; }
+.kv { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-top: 14px; }
+.kv .k { font-size: 12px; color: var(--text-muted); }
+.kv .v { font-size: 17px; font-weight: 650; }
+.kv .v small { font-size: 12px; font-weight: 400; color: var(--text-secondary); margin-left: 1px; }
+.week-bars { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; align-items: end; height: 64px; margin-top: 12px; }
+.week-bars div { display: flex; flex-direction: column; align-items: center; justify-content: flex-end; height: 100%; gap: 4px; }
+.week-bars i { width: 100%; max-width: 22px; border-radius: 4px 4px 0 0; background: var(--accent); min-height: 0; }
+.week-bars i.zero { background: var(--surface-3); height: 3px; border-radius: 2px; }
+.week-bars span { font-size: 11px; color: var(--text-muted); }
+.week-bars .today span { color: var(--text-primary); font-weight: 600; }
+.delta { font-size: 12px; color: var(--text-secondary); }
+.best { list-style: none; margin: 0; padding: 0; }
+.best li { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; padding: 9px 0; border-top: 1px solid var(--grid); cursor: pointer; }
+.best li:first-child { border-top: 0; padding-top: 2px; }
+.best li:hover .bv { color: var(--accent-ink); }
+.best .bk { color: var(--text-secondary); font-size: 13px; }
+.best .bv { font-weight: 650; font-variant-numeric: tabular-nums; }
+.best .bd2 { font-size: 11px; color: var(--text-muted); text-align: right; }
+
+.hero { position: relative; overflow: hidden; }
+#heroMap { height: 400px; }
+.hero .over { position: absolute; left: 12px; bottom: 12px; z-index: 500; background: var(--surface-1); border-radius: 10px; padding: 8px 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.12); font-size: 12px; color: var(--text-secondary); pointer-events: none; }
+.hero .over b { color: var(--text-primary); font-size: 15px; }
+
+#log { overflow-x: auto; }
+#log rect:hover { stroke: var(--text-primary); stroke-width: 1.5px; }
+.heat-legend { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-top: 10px; font-size: 11px; }
+.heat-legend .sw { display: flex; align-items: center; gap: 3px; color: var(--text-muted); }
+.heat-legend i { width: 11px; height: 11px; border-radius: 2px; display: inline-block; }
+
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chips button { border: 1px solid var(--border); background: var(--surface-1); color: var(--text-secondary); border-radius: 999px; padding: 4px 12px; font-size: 13px; cursor: pointer; }
+.chips button:hover { background: var(--surface-2); }
+.chips button.on { background: var(--text-primary); border-color: var(--text-primary); color: var(--surface-1); }
+.feedbar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 16px; }
+select { font: inherit; font-size: 13px; color: var(--text-primary); background: var(--surface-1); border: 1px solid var(--border); border-radius: 8px; padding: 4px 8px; }
+
+.feed { display: grid; gap: 12px; }
+.reviewcard { margin-bottom: 16px; border-left: 4px solid var(--accent); }
+.reviewgrid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
+.reviewgrid .rk { font-size: 12px; font-weight: 700; color: var(--accent-ink); margin-bottom: 4px; }
+.reviewgrid .rt { font-size: 14px; line-height: 1.7; color: var(--text-primary); }
+@media (max-width: 900px) { .reviewgrid { grid-template-columns: minmax(0, 1fr); } }
+#viewSegs .feedhead { justify-content: flex-start; align-items: baseline; }
+.segcard { margin-bottom: 16px; }
+.segtop { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 16px; margin-bottom: 14px; }
+.segmap { height: 200px; border-radius: 10px; overflow: hidden; }
+.segstats { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; align-content: center; }
+.segstats .k { font-size: 12px; color: var(--text-muted); }
+.segstats .v { font-size: 26px; font-weight: 700; font-variant-numeric: tabular-nums; line-height: 1.2; }
+.segstats .v small { font-size: 13px; font-weight: 400; color: var(--text-secondary); margin-left: 2px; }
+.segstats .s { font-size: 12px; color: var(--text-secondary); }
+.seghead { display: flex; flex-wrap: wrap; gap: 8px 16px; align-items: center; justify-content: space-between; margin-bottom: 6px; }
+.tlegend i.ringk { width: 10px; height: 10px; border-radius: 50%; border: 1.5px solid var(--text-primary); }
+.seglb { margin-top: 14px; max-height: 420px; overflow-y: auto; }
+.seglb table th { position: sticky; top: 0; background: var(--surface-1); }
+.seglb .lbrow { cursor: pointer; }
+.seglb th:nth-child(2), .seglb td:nth-child(2) { text-align: left; }
+.seglb th:first-child, .seglb td:first-child { width: 36px; }
+.seglb .lbrow:hover td { background: var(--surface-2); }
+.seglb .lbrow.latest td { background: var(--accent-soft); }
+.medal { display: inline-grid; place-items: center; width: 20px; height: 20px; border-radius: 50%; font-size: 11px; font-weight: 700; color: #fff; }
+.medal.m1 { background: #d9a400; } .medal.m2 { background: #9a9a9a; } .medal.m3 { background: #b4703f; }
+.rseg { display: flex; flex-wrap: wrap; gap: 4px 16px; align-items: baseline; padding: 6px 0; border-top: 1px solid var(--grid); font-size: 14px; }
+.rseg:first-child { border-top: 0; }
+.rseg a { color: var(--accent-ink); font-weight: 600; text-decoration: none; }
+@media (max-width: 760px) { .segtop { grid-template-columns: minmax(0, 1fr); } }
+#viewTrends .feedhead { justify-content: flex-start; align-items: baseline; }
+.trend-tiles { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; margin-bottom: 16px; }
+.tile2 { padding: 14px 16px; }
+.tile2 .k { font-size: 12px; color: var(--text-muted); }
+.tile2 .v { font-size: 26px; font-weight: 700; line-height: 1.2; font-variant-numeric: tabular-nums; }
+.tile2 .v small { font-size: 13px; font-weight: 400; color: var(--text-secondary); margin-left: 2px; }
+.tile2 .dl { font-size: 12px; margin-top: 2px; font-variant-numeric: tabular-nums; }
+.tile2 .dl.up { color: var(--good); }
+.tile2 .dl.down { color: var(--hr); }
+.tile2 .dl.flat { color: var(--text-secondary); }
+.trend-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+.trend-grid.g3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.tsec { font-size: 17px; margin: 24px 0 10px; display: flex; align-items: baseline; gap: 10px; }
+.tsec small { font-size: 12px; font-weight: 400; color: var(--text-muted); }
+.segtargets { display: flex; flex-wrap: wrap; gap: 6px 10px; align-items: center; margin: -2px 0 14px; padding: 10px 12px; border-radius: 10px; background: var(--accent-soft); font-size: 13px; }
+.segtargets .tt { font-weight: 700; color: var(--accent-ink); }
+.segtargets .tg { background: var(--surface-1); border-radius: 6px; padding: 3px 9px; }
+.segtargets .tg b { font-variant-numeric: tabular-nums; }
+.segtargets .hrtg { color: var(--text-secondary); }
+.badge.hard { background: rgba(98,80,214,0.14); color: var(--power); }
+.ok { color: var(--good); font-weight: 700; }
+.rsegt { width: 100%; font-size: 12px; color: var(--text-muted); }
+.tlegend { display: flex; flex-wrap: wrap; gap: 14px; font-size: 12px; color: var(--text-secondary); margin-bottom: 4px; }
+.tlegend i { display: inline-block; vertical-align: middle; margin-right: 5px; }
+.tlegend i.dot { width: 8px; height: 8px; border-radius: 50%; }
+.tlegend i.bar { width: 14px; height: 3px; border-radius: 2px; }
+.tfoot { font-size: 12px; margin-top: 6px; }
+@media (max-width: 1100px) { .trend-grid.g3 { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 960px) { .trend-tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); } .trend-grid, .trend-grid.g3 { grid-template-columns: minmax(0, 1fr); } }
+#viewFeed { max-width: 920px; }
+.feedhead { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 12px; }
+.feedhead h1 { margin: 0; font-size: 24px; }
+.filterbar { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.seg.big button { padding: 6px 14px; font-size: 14px; }
+.seg.big button small { color: var(--text-muted); margin-left: 4px; font-size: 12px; }
+.seg.big button.on small { color: var(--text-secondary); }
+.feedsum { display: flex; flex-wrap: wrap; gap: 4px 24px; color: var(--text-secondary); font-size: 13px; margin-bottom: 12px; }
+.feedsum b { color: var(--text-primary); font-variant-numeric: tabular-nums; }
+#recentList .act .mini { min-height: 120px; }
+.act { display: grid; grid-template-columns: minmax(0, 1fr) 260px; cursor: pointer; overflow: hidden; transition: border-color .15s; }
+.act:hover { border-color: var(--accent); }
+.act .info { padding: 14px 16px; display: flex; flex-direction: column; gap: 10px; }
+.act .t { display: flex; align-items: center; gap: 10px; }
+.act .ico { width: 36px; height: 36px; flex: none; border-radius: 50%; background: var(--accent-soft); color: var(--accent-ink); display: grid; place-items: center; }
+.act .t1 { font-weight: 650; font-size: 16px; line-height: 1.3; }
+.act .t2 { font-size: 12px; color: var(--text-muted); }
+.stats { display: flex; flex-wrap: wrap; gap: 6px 24px; }
+.stats .k { font-size: 11px; color: var(--text-muted); }
+.stats .v { font-size: 18px; font-weight: 650; font-variant-numeric: tabular-nums; line-height: 1.25; }
+.stats .v small { font-size: 12px; font-weight: 400; color: var(--text-secondary); margin-left: 1px; }
+.act .mini { min-height: 150px; background: var(--surface-2); }
+.more { display: flex; justify-content: center; padding-top: 4px; }
+.more button { border: 1px solid var(--border); background: var(--surface-1); border-radius: 8px; padding: 8px 20px; cursor: pointer; }
+.more button:hover { background: var(--surface-2); }
+
+/* ride detail */
+.crumbs { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-bottom: 12px; }
+.crumbs a { color: var(--text-secondary); text-decoration: none; font-size: 13px; }
+.crumbs a:hover { color: var(--accent-ink); }
+.rtitle { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; }
+.rtitle h1 { margin: 0; font-size: 24px; line-height: 1.25; }
+.rtitle > div:last-child { flex: 1; min-width: 0; }
+.editbtn { border: 0; background: none; color: var(--text-muted); cursor: pointer; padding: 4px; border-radius: 6px; vertical-align: 2px; }
+.editbtn:hover { color: var(--accent-ink); background: var(--surface-2); }
+.datepre { font-size: 24px; font-weight: 700; margin-right: 8px; }
+.rename { display: inline-flex; gap: 6px; align-items: center; flex-wrap: wrap; vertical-align: top; }
+.rename input { font: inherit; font-size: 20px; font-weight: 600; padding: 2px 10px; width: min(360px, 60vw); border: 1px solid var(--accent); border-radius: 8px; background: var(--surface-1); color: var(--text-primary); outline: none; box-shadow: 0 0 0 3px var(--accent-soft); }
+.primarybtn, .ghostbtn { font-size: 14px; padding: 6px 14px; border-radius: 8px; cursor: pointer; border: 1px solid var(--border); }
+.primarybtn { background: var(--accent); border-color: var(--accent); color: #fff; font-weight: 600; }
+.ghostbtn { background: var(--surface-1); color: var(--text-secondary); }
+.renamehint { font-size: 12px; font-weight: 400; color: var(--text-muted); margin-top: 6px; }
+.rtitle .ico { width: 44px; height: 44px; border-radius: 50%; background: var(--accent-soft); color: var(--accent-ink); display: grid; place-items: center; flex: none; }
+.rtop { display: grid; grid-template-columns: minmax(0, 1fr) 340px; gap: 16px; margin-bottom: 16px; }
+#rideMap { height: 460px; border-radius: 12px; overflow: hidden; }
+.rmapcard { overflow: hidden; }
+.primary { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; padding: 18px 18px 14px; border-bottom: 1px solid var(--grid); }
+.primary .v { font-size: 26px; font-weight: 700; line-height: 1.15; font-variant-numeric: tabular-nums; }
+.primary .v small { font-size: 13px; font-weight: 400; color: var(--text-secondary); margin-left: 2px; }
+.primary .k { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+.secondary { display: grid; grid-template-columns: 1fr auto auto; gap: 0 16px; padding: 10px 18px 16px; font-size: 13px; }
+.secondary > div { padding: 7px 0; border-top: 1px solid var(--grid); }
+.secondary > div:nth-child(-n+3) { border-top: 0; }
+.secondary .h { color: var(--text-muted); font-size: 11px; }
+.secondary .c { text-align: right; font-variant-numeric: tabular-nums; }
+.secondary .lab { color: var(--text-secondary); }
+.chart-legend { display: flex; flex-wrap: wrap; gap: 14px; font-size: 12px; color: var(--text-secondary); }
+.chart-legend i { display: inline-block; width: 10px; height: 3px; border-radius: 2px; vertical-align: middle; margin-right: 5px; }
+.ptitle { font-size: 12px; color: var(--text-secondary); margin: 10px 0 2px; display: flex; justify-content: space-between; }
+.ptitle b { color: var(--text-primary); font-weight: 600; font-variant-numeric: tabular-nums; }
+svg text { font-family: inherit; }
+.axis-label { fill: var(--text-muted); font-size: 11px; font-variant-numeric: tabular-nums; }
+.val-label { fill: var(--text-secondary); font-size: 11px; font-variant-numeric: tabular-nums; }
+table.splits { width: 100%; border-collapse: collapse; font-size: 13px; }
+.splits th { font-size: 11px; color: var(--text-muted); font-weight: 500; text-align: right; padding: 0 8px 6px; }
+.splits td { text-align: right; padding: 6px 8px; border-top: 1px solid var(--grid); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.splits th:first-child, .splits td:first-child { text-align: left; }
+.splits td.bar { width: 40%; text-align: left; }
+.splits td.bar div { display: flex; align-items: center; gap: 8px; }
+.splits td.bar i { display: block; height: 14px; border-radius: 0 4px 4px 0; background: var(--speed); opacity: .85; }
+.splits tr.fast td.bar i { opacity: 1; }
+.pager { display: flex; justify-content: space-between; gap: 12px; margin-top: 16px; }
+.pager button { flex: 1; text-align: left; border: 1px solid var(--border); background: var(--surface-1); border-radius: 12px; padding: 12px 16px; cursor: pointer; box-shadow: var(--shadow); }
+.pager button:last-child { text-align: right; }
+.pager button:hover:not(:disabled) { border-color: var(--accent); }
+.pager button:disabled { visibility: hidden; }
+.pager .k { font-size: 12px; color: var(--text-muted); }
+.pager .v { font-weight: 600; }
+
+.tip { position: fixed; pointer-events: none; z-index: 2000; background: var(--surface-1); color: var(--text-primary);
+  border: 1px solid var(--border); border-radius: 8px; padding: 6px 10px; font-size: 12px; line-height: 1.55;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.14); display: none; white-space: nowrap; }
+.tip b { font-weight: 600; }
+.tip .m { color: var(--text-secondary); }
+.tip i { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 6px; vertical-align: 0; }
+.leaflet-container { background: var(--surface-2); font: inherit; }
+/* soften the street map a little so the blue tracks lead; satellite stays untouched */
+.tiles-soft .leaflet-tile-pane { filter: saturate(0.55) brightness(1.04); }
+.leaflet-control-attribution { font-size: 10px; }
+.footer { color: var(--text-muted); font-size: 12px; text-align: center; margin-top: 24px; }
+[hidden] { display: none !important; }
+
+@media (max-width: 960px) {
+  .home { grid-template-columns: minmax(0, 1fr); }
+  .side { position: static; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); }
+  .mainc { display: contents; }               /* narrow: map first, then stats, then the rest */
+  .hero { order: -1; }
+  .rtop { grid-template-columns: minmax(0, 1fr); }
+  #rideMap { height: 340px; }
+}
+@media (max-width: 600px) {
+  .topbar .in { gap: 8px; padding: 0 10px; }
+  .brand span { display: none; }
+  .nav { gap: 0; min-width: 0; }
+  .nav a { padding: 6px 8px; white-space: nowrap; }
+  #layerSeg button { padding: 4px 6px; white-space: nowrap; }
+  .act { grid-template-columns: minmax(0, 1fr); }
+  .act .mini { order: -1; min-height: 140px; }
+  #heroMap { height: 300px; }
+  .stats { gap: 6px 18px; }
+  .primary .v { font-size: 22px; }
+  .splits .hide-s { display: none; }
+}
+</style>
+</head>
+<body>
+<header class="topbar"><div class="in">
+  <div class="brand" onclick="location.hash=''">
+    <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="5.5" cy="17.5" r="3.5"/><circle cx="18.5" cy="17.5" r="3.5"/><path d="M15 6a1 1 0 1 0 0-2 1 1 0 0 0 0 2zm-3 11.5V14l-3-3 4-3 2 3h2"/></svg>
+    <span>骑行记录</span>
+  </div>
+  <nav class="nav"><a href="#" id="navHome" class="on">总览</a><a href="#feed" id="navFeed">活动</a><a href="#trends" id="navTrends">趋势</a><a href="#segments" id="navSegs">路段</a></nav>
+  <div class="seg" id="layerSeg" title="底图"><button data-l="clean">简洁</button><button data-l="std">标准</button><button data-l="sat">卫星</button></div>
+</div></header>
+
+<div class="page" id="viewHome">
+  <div class="home">
+    <aside class="side">
+      <div class="card year"><div class="hd"><h2 id="yearTitle"></h2></div><div class="bd" id="yearBody"></div></div>
+      <div class="card"><div class="hd"><h2>本周</h2><span class="aside" id="weekRange"></span></div><div class="bd" id="weekBody"></div></div>
+      <div class="card"><div class="hd"><h2>个人纪录</h2></div><div class="bd"><ul class="best" id="best"></ul></div></div>
+    </aside>
+    <div class="mainc">
+      <div class="card hero"><div id="heroMap"></div><div class="over" id="heroOver"></div></div>
+      <div class="card"><div class="hd"><h2>训练日志</h2><span class="aside" id="logAside"></span></div><div class="bd"><div id="log"></div><div class="heat-legend"><span class="muted">按当天总里程：10 / 20 / 34 km 分档</span><span class="sw" id="logLegend"></span></div></div></div>
+      <div class="card"><div class="hd"><h2>每月里程</h2><span class="aside">km</span></div><div class="bd"><div id="months"></div></div></div>
+      <div class="card"><div class="hd"><h2>最近活动</h2><a class="linkbtn" href="#feed">查看全部 →</a></div>
+        <div class="bd"><div class="feed" id="recentList"></div></div>
+      </div>
+    </div>
+  </div>
+  <div class="footer" id="footer"></div>
+</div>
+
+<div class="page" id="viewFeed" hidden>
+  <div class="feedhead">
+    <h1>活动</h1>
+    <div class="filterbar">
+      <div class="seg big" id="typeSeg"></div>
+      <select id="monthSel" aria-label="月份"></select>
+      <select id="sortSel" aria-label="排序">
+        <option value="new">最新在前</option><option value="dist">距离最长</option><option value="avg">均速最快</option><option value="gain">爬升最多</option>
+      </select>
+    </div>
+  </div>
+  <div class="feedsum" id="feedSum"></div>
+  <div class="feed" id="feedList"></div>
+  <div class="more" id="feedMore"></div>
+</div>
+
+<div class="page" id="viewTrends" hidden>
+  <div class="feedhead"><h1>体能趋势</h1><span class="muted" id="trendNote"></span></div>
+  <div class="trend-tiles" id="trendTiles"></div>
+  <h3 class="tsec">心肺<small>同样的强度下，心率越低、停车后降得越快越好</small></h3>
+  <div class="trend-grid g3">
+    <div class="card"><div class="hd"><h2>同功率心率</h2><span class="aside">bpm · 换算到 100 W · 越低越好</span></div><div class="bd"><div class="tlegend" id="lgNhr"></div><div id="tNhr"></div><div class="muted tfoot">每趟通勤去掉前 10 分钟，按功率差把平均心率换算到 100 W。上下班地形不同，分开看。</div></div></div>
+    <div class="card"><div class="hd"><h2>红灯心率恢复</h2><span class="aside">bpm · 停车约 1 分钟降多少 · 越高越好</span></div><div class="bd"><div class="tlegend" id="lgHrr"></div><div id="tHrr"></div><div class="muted tfoot">骑到 140 以上遇红灯、停约 1 分钟（45–75 秒）时，心率降了多少；每次骑行取中位数。</div></div></div>
+    <div class="card"><div class="hd"><h2>出门爬坡：同功率坡顶心率</h2><span class="aside">bpm · 越低越好</span></div><div class="bd"><div class="tlegend" id="lgClimb"></div><div id="tClimb"></div><div class="muted tfoot" id="climbFoot"></div></div></div>
+  </div>
+  <h3 class="tsec">力量<small>能使出、并维持的功率</small></h3>
+  <div class="trend-grid">
+    <div class="card"><div class="hd"><h2>丈八东路功率</h2><span class="aside">W · 每次通过</span></div><div class="bd"><div class="tlegend" id="lgZb"></div><div id="tZb"></div><div class="muted tfoot" id="zbFoot"></div></div></div>
+    <div class="card"><div class="hd"><h2>每月最佳 1 / 5 分钟功率</h2><span class="aside">W · 当月所有骑行</span></div><div class="bd"><div class="tlegend" id="lgBest"></div><div id="tBest"></div><div class="muted tfoot">日常骑行里出现的最高值，不是全力测试；当月骑得少时会偏低。</div></div></div>
+  </div>
+  <h3 class="tsec">训练量<small>体能跟着它走</small></h3>
+  <div class="trend-grid">
+    <div class="card"><div class="hd"><h2>每周骑行时长</h2><span class="aside">小时 · 深色 = 当周骑了 3 天以上</span></div><div class="bd"><div id="tWeek"></div></div></div>
+    <div class="card"><div class="hd"><h2>训练量</h2><span class="aside">近 6 周平均每天做功（kJ）</span></div><div class="bd"><div class="tlegend" id="lgCtl"></div><div id="tCtl"></div><div class="muted tfoot" id="ctlFoot"></div></div></div>
+  </div>
+  <h3 class="tsec">通勤表现<small>参考：受地形、路况影响大</small></h3>
+  <div class="trend-grid">
+    <div class="card"><div class="hd"><h2>通勤速度</h2><span class="aside">km/h · 骑行中</span></div><div class="bd"><div class="tlegend" id="lgSpd"></div><div id="tSpd"></div></div></div>
+    <div class="card"><div class="hd"><h2>通勤平均功率</h2><span class="aside">W · 骑行中</span></div><div class="bd"><div class="tlegend" id="lgPw"></div><div id="tPw"></div></div></div>
+  </div>
+</div>
+
+<div class="page" id="viewSegs" hidden>
+  <div class="feedhead"><h1>路段</h1><span class="muted">固定的一段路，每次经过自动计时；路段定义在 rides/segments.json</span></div>
+  <div id="segList"></div>
+</div>
+
+<div class="page" id="viewRide" hidden>
+  <div class="crumbs"><a href="#feed">← 全部活动</a><span class="muted" id="rideIdx"></span></div>
+  <div class="rtitle"><div class="ico" id="rIco"></div><div><h1 id="rName"></h1><div class="muted" id="rMeta"></div></div></div>
+  <div class="card reviewcard" id="rReview" hidden></div>
+  <div class="rtop">
+    <div class="card rmapcard"><div id="rideMap"></div></div>
+    <div class="card"><div class="primary" id="rPrimary"></div><div class="secondary" id="rSecondary"></div></div>
+  </div>
+  <div class="card" style="margin-bottom:16px"><div class="hd"><h2>数据分析</h2><div class="chart-legend" id="rLegend"></div></div><div class="bd" id="rCharts"></div></div>
+  <div class="card" id="rSegCard" style="margin-bottom:16px" hidden><div class="hd"><h2>路段</h2></div><div class="bd" id="rSegs"></div></div>
+  <div class="card"><div class="hd"><h2>分段（每公里）</h2></div><div class="bd"><table class="splits" id="rSplits"></table></div></div>
+  <div class="pager"><button id="prevBtn"></button><button id="nextBtn"></button></div>
+</div>
+<div class="tip" id="tip"></div>
+
+<script>
+const DATA = /*__DATA__*/null;
+const rides = DATA.rides;                       // oldest first
+const byId = Object.fromEntries(rides.map((r, i) => [r.id, Object.assign(r, { idx: i })]));
+const $ = id => document.getElementById(id);
+const css = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const pad = n => String(n).padStart(2, '0');
+const WD = ['日', '一', '二', '三', '四', '五', '六'];
+const dt = s => new Date(s * 1000);
+const ymd = d => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+const hm = s => { const d = dt(s); return `${pad(d.getHours())}:${pad(d.getMinutes())}`; };
+const md = s => { const d = dt(s); return `${d.getMonth() + 1}月${d.getDate()}日`; };
+const dur = sec => { const h = Math.floor(sec / 3600), m = Math.floor(sec % 3600 / 60), s = Math.round(sec % 60); return h ? `${h}:${pad(m)}:${pad(s)}` : `${m}:${pad(s)}`; };
+const durH = sec => { const h = Math.floor(sec / 3600), m = Math.round(sec % 3600 / 60); return h ? `${h}小时${m}分` : `${m}分钟`; };
+const fmt = (v, d = 0) => v == null ? '–' : Number(v).toLocaleString('zh-CN', { minimumFractionDigits: d, maximumFractionDigits: d });
+const svgNS = 'http://www.w3.org/2000/svg';
+const el = (tag, attrs = {}, parent) => { const e = document.createElementNS(svgNS, tag); for (const k in attrs) e.setAttribute(k, attrs[k]); if (parent) parent.appendChild(e); return e; };
+const store = { get(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }, set(k, v) { try { localStorage.setItem(k, v); } catch (e) {} } };
+const ICON = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="5.5" cy="17.5" r="3.5"/><circle cx="18.5" cy="17.5" r="3.5"/><path d="M15 6a1 1 0 1 0 0-2 1 1 0 0 0 0 2zm-3 11.5V14l-3-3 4-3 2 3h2"/></svg>';
+
+const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
+function autoName(r) {
+  const h = dt(r.start).getHours();
+  if (r.commute) return h < 12 ? '上班通勤' : '下班通勤';
+  const part = h < 5 ? '夜间' : h < 9 ? '早晨' : h < 12 ? '上午' : h < 14 ? '午间' : h < 17 ? '下午' : h < 19 ? '傍晚' : '夜间';
+  return part + (r.commute ? '通勤' : '骑行');
+}
+const rideName = r => r.name ? esc(r.name) : autoName(r);   // HTML-safe: names can be typed by hand
+
+/* ---------- renames: names.json via xds_app.py when served by it, else this browser's storage ---------- */
+let nameServer = false;
+const localNames = () => { try { return JSON.parse(store.get('xds.names') || '{}'); } catch (e) { return {}; } };
+function applyName(r, name) {
+  r.name = name || null;
+  if (name && /^(上班通勤|下班通勤)/.test(name)) r.commute = true;
+}
+async function loadNames() {
+  if (location.protocol.startsWith('http')) {
+    try {
+      const res = await fetch('api/names', { cache: 'no-store' });
+      if (res.ok) {
+        const names = await res.json(); nameServer = true;
+        for (const r of rides) if (r.id in names || r.name) applyName(r, names[r.id]);
+      }
+    } catch (e) {}
+  }
+  const local = localNames();
+  for (const id in local) if (byId[id]) applyName(byId[id], local[id]);
+}
+async function saveName(r, name) {
+  name = name.trim().slice(0, 40);
+  if (nameServer) {
+    const res = await fetch('api/name', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: r.id, name }) });
+    if (!res.ok) throw new Error((await res.json().catch(() => ({}))).error || res.status);
+  } else {
+    const local = localNames();
+    if (name) local[r.id] = name; else delete local[r.id];
+    store.set('xds.names', JSON.stringify(local));
+  }
+  applyName(r, name);
+  if (homeDrawn) { drawBest(); drawRecent(); }
+  if (feedDrawn) drawFeed();
+}
+const title = r => `${md(r.start)} ${rideName(r)}`;
+const hrSuspect = r => r.hrq && (r.hrq.status === 'suspect' || r.hrq.status === 'bad');
+const hrWhy = r => r.hrq ? `心率带信号异常（${r.hrq.why.join('、')}），已去掉 ${r.hrq.pct}% 的心率数据` : '';
+const hrBadge = r => hrSuspect(r) ? ` <span class="badge warn" title="${esc(hrWhy(r))}">心率存疑</span>` : '';
+const metaLine = r => { const d = dt(r.start); return `${d.getFullYear()}年${md(r.start)} 周${WD[d.getDay()]} · ${hm(r.start)}–${hm(r.end)}`; };
+
+/* ---------- tooltip ---------- */
+const tip = $('tip');
+function showTip(html, x, y) {
+  tip.innerHTML = html; tip.style.display = 'block';
+  const r = tip.getBoundingClientRect();
+  let left = x + 14, top = y + 14;
+  if (left + r.width > innerWidth - 8) left = x - r.width - 14;
+  if (top + r.height > innerHeight - 8) top = y - r.height - 14;
+  tip.style.left = left + 'px'; tip.style.top = top + 'px';
+}
+const hideTip = () => { tip.style.display = 'none'; };
+
+/* ---------- map layers (WGS-84 data; AMap needs GCJ-02) ---------- */
+function wgs2gcj(lat, lon) {
+  const a = 6378245.0, ee = 0.00669342162296594323, x = lon - 105, y = lat - 35, PI = Math.PI;
+  let dLat = -100 + 2 * x + 3 * y + 0.2 * y * y + 0.1 * x * y + 0.2 * Math.sqrt(Math.abs(x))
+    + (20 * Math.sin(6 * x * PI) + 20 * Math.sin(2 * x * PI)) * 2 / 3 + (20 * Math.sin(y * PI) + 40 * Math.sin(y / 3 * PI)) * 2 / 3
+    + (160 * Math.sin(y / 12 * PI) + 320 * Math.sin(y * PI / 30)) * 2 / 3;
+  let dLon = 300 + x + 2 * y + 0.1 * x * x + 0.1 * x * y + 0.1 * Math.sqrt(Math.abs(x))
+    + (20 * Math.sin(6 * x * PI) + 20 * Math.sin(2 * x * PI)) * 2 / 3 + (20 * Math.sin(x * PI) + 40 * Math.sin(x / 3 * PI)) * 2 / 3
+    + (150 * Math.sin(x / 12 * PI) + 300 * Math.sin(x / 30 * PI)) * 2 / 3;
+  const rad = lat / 180 * PI, magic = 1 - ee * Math.sin(rad) ** 2, sq = Math.sqrt(magic);
+  dLat = dLat * 180 / ((a * (1 - ee)) / (magic * sq) * PI);
+  dLon = dLon * 180 / (a / sq * Math.cos(rad) * PI);
+  return [lat + dLat, lon + dLon];
+}
+// AMap tiles (fast and keyless in China; all GCJ-02): clean = roads without POI labels, std = full map, sat = imagery
+const LAYERS = {
+  clean: 'https://webrd0{s}.is.autonavi.com/appmaptile?lang=zh_cn&size=1&scale=2&style=8&ltype=11&x={x}&y={y}&z={z}',
+  std: 'https://webrd0{s}.is.autonavi.com/appmaptile?lang=zh_cn&size=1&scale=2&style=8&x={x}&y={y}&z={z}',
+  sat: 'https://webst0{s}.is.autonavi.com/appmaptile?style=6&x={x}&y={y}&z={z}',
+};
+let layerKey = LAYERS[store.get('xds.layer')] ? store.get('xds.layer') : 'clean';
+function tileLayer(opts = {}) {
+  document.body.classList.toggle('tiles-soft', layerKey !== 'sat');
+  return L.tileLayer(LAYERS[layerKey], Object.assign({ subdomains: '1234', maxZoom: 18, attribution: '© 高德地图' }, opts));
+}
+const P = ll => wgs2gcj(ll[0], ll[1]);
+const PP = arr => arr.map(P);
+for (const b of document.querySelectorAll('#layerSeg button')) {
+  b.classList.toggle('on', b.dataset.l === layerKey);
+  b.onclick = () => { layerKey = b.dataset.l; store.set('xds.layer', layerKey); for (const x of document.querySelectorAll('#layerSeg button')) x.classList.toggle('on', x === b); rebuildMaps(); };
+}
+
+/* ============ HOME ============ */
+const sum = (a, f) => a.reduce((s, r) => s + (f(r) || 0), 0);
+const latest = rides[rides.length - 1];
+const year = dt(latest.start).getFullYear();
+function drawYear() {
+  const ys = rides.filter(r => dt(r.start).getFullYear() === year);
+  const km = sum(ys, r => r.dist), sec = sum(ys, r => r.secs);
+  $('yearTitle').textContent = `${year} 年`;
+  $('yearBody').innerHTML = `<div class="big num">${fmt(km, 1)}<small>km</small></div>
+    <div class="kv">
+      <div><div class="k">骑行</div><div class="v num">${ys.length}<small>次</small></div></div>
+      <div><div class="k">时间</div><div class="v num">${fmt(sec / 3600, 1)}<small>h</small></div></div>
+      <div><div class="k">爬升</div><div class="v num">${fmt(sum(ys, r => r.gain))}<small>m</small></div></div>
+      <div><div class="k">均速</div><div class="v num">${fmt(km / (sec / 3600), 1)}<small>km/h</small></div></div>
+      <div><div class="k">热量</div><div class="v num">${fmt(sum(ys, r => r.kcal))}<small>kcal</small></div></div>
+      <div><div class="k">通勤</div><div class="v num">${ys.filter(r => r.commute).length}<small>次</small></div></div>
+    </div>`;
+}
+const mondayOf = d => { const m = new Date(d.getFullYear(), d.getMonth(), d.getDate()); m.setDate(m.getDate() - ((m.getDay() + 6) % 7)); return m; };
+const kmByDay = {}; const ridesByDay = {};
+for (const r of rides) { const k = ymd(dt(r.start)); kmByDay[k] = (kmByDay[k] || 0) + r.dist; (ridesByDay[k] = ridesByDay[k] || []).push(r); }
+function drawWeek() {
+  const today = new Date(), mon = mondayOf(today);
+  const days = [...Array(7)].map((_, i) => { const d = new Date(mon); d.setDate(d.getDate() + i); return d; });
+  const kms = days.map(d => kmByDay[ymd(d)] || 0), tot = kms.reduce((a, b) => a + b, 0);
+  const lastMon = new Date(mon); lastMon.setDate(lastMon.getDate() - 7);
+  let lastTot = 0; for (let i = 0; i < 7; i++) { const d = new Date(lastMon); d.setDate(d.getDate() + i); lastTot += kmByDay[ymd(d)] || 0; }
+  const rs = days.flatMap(d => ridesByDay[ymd(d)] || []);
+  const max = Math.max(...kms, 20);
+  $('weekRange').textContent = `${md(mon / 1000)} – ${md(days[6] / 1000)}`;
+  const diff = tot - lastTot;
+  $('weekBody').innerHTML = `<div class="kv" style="margin-top:0">
+      <div><div class="k">距离</div><div class="v num">${fmt(tot, 1)}<small>km</small></div></div>
+      <div><div class="k">骑行</div><div class="v num">${rs.length}<small>次</small></div></div>
+      <div><div class="k">时间</div><div class="v num">${fmt(sum(rs, r => r.secs) / 3600, 1)}<small>h</small></div></div></div>
+    <div class="week-bars">${days.map((d, i) => `<div class="${ymd(d) === ymd(today) ? 'today' : ''}" data-day="${ymd(d)}">${kms[i] ? `<i style="height:${Math.max(4, kms[i] / max * 46)}px"></i>` : '<i class="zero"></i>'}<span>${WD[d.getDay()]}</span></div>`).join('')}</div>
+    <div class="delta" style="margin-top:8px">上周 ${fmt(lastTot, 1)} km${lastTot || tot ? ` · ${diff >= 0 ? '多' : '少'} ${fmt(Math.abs(diff), 1)} km` : ''}</div>`;
+  for (const c of document.querySelectorAll('.week-bars [data-day]')) {
+    const list = ridesByDay[c.dataset.day] || [];
+    c.onmousemove = e => showTip(`<b>${c.dataset.day.slice(5).replace('-', '月')}日</b><br>${list.length ? list.map(r => `${hm(r.start)} ${rideName(r)} · ${fmt(r.dist, 1)} km`).join('<br>') : '<span class="m">没有骑行</span>'}`, e.clientX, e.clientY);
+    c.onmouseleave = hideTip;
+    if (list.length) { c.style.cursor = 'pointer'; c.onclick = () => openRide(list[0].id); }
+  }
+}
+function drawBest() {
+  const pick = (f, filt = () => true) => rides.filter(filt).reduce((b, r) => (f(r) ?? -1) > (f(b) ?? -1) ? r : b, rides.filter(filt)[0]);
+  const items = [
+    ['最远距离', pick(r => r.dist), r => `${fmt(r.dist, 1)} km`],
+    ['最长时间', pick(r => r.secs), r => durH(r.secs)],
+    ['最快均速', pick(r => r.avg, r => r.dist >= 10), r => `${fmt(r.avg, 1)} km/h`],
+    ['最高速度', pick(r => r.max), r => `${fmt(r.max, 1)} km/h`],
+    ['最大爬升', pick(r => r.gain), r => `${fmt(r.gain)} m`],
+    ['最高平均功率', pick(r => r.pw, r => r.dist >= 10), r => `${fmt(r.pw)} W`],
+  ].filter(x => x[1]);
+  $('best').innerHTML = items.map(([k, r, f]) => `<li data-id="${r.id}"><span class="bk">${k}</span><span><div class="bv">${f(r)}</div><div class="bd2">${dt(r.start).getMonth() + 1}/${dt(r.start).getDate()} ${rideName(r)}</div></span></li>`).join('');
+  for (const li of document.querySelectorAll('#best li')) li.onclick = () => openRide(li.dataset.id);
+}
+
+/* hero map: every route, overlapping commutes build up darker */
+let heroMap, heroLines = [];
+function drawHero() {
+  if (!heroMap) {
+    heroMap = L.map('heroMap', { zoomControl: true, scrollWheelZoom: false, preferCanvas: true });
+    heroMap.on('focus', () => heroMap.scrollWheelZoom.enable());
+  }
+  heroMap.eachLayer(l => heroMap.removeLayer(l));
+  tileLayer().addTo(heroMap);
+  heroLines = [];
+  let bounds = null;
+  for (const r of rides) {
+    if (r.trk.length < 2) continue;
+    const pl = L.polyline(PP(r.trk), { color: css('--route'), weight: 2.5, opacity: 0.5 }).addTo(heroMap);
+    pl.on('mouseover', e => { pl.setStyle({ weight: 5, opacity: 1 }).bringToFront(); showTip(`<b>${rideName(r)}</b><br>${md(r.start)} ${hm(r.start)} · ${fmt(r.dist, 1)} km`, e.originalEvent.clientX, e.originalEvent.clientY); });
+    pl.on('mouseout', () => { pl.setStyle({ weight: 2.5, opacity: 0.5 }); hideTip(); });
+    pl.on('click', () => openRide(r.id));
+    heroLines.push(pl);
+    bounds = bounds ? bounds.extend(pl.getBounds()) : pl.getBounds();
+  }
+  if (bounds) heroMap.fitBounds(bounds, { padding: [24, 24] });
+  $('heroOver').innerHTML = `<b class="num">${rides.length}</b> 次骑行 · <b class="num">${fmt(sum(rides, r => r.dist), 0)}</b> km<br>颜色越深的路线骑得越多`;
+}
+
+/* training log: GitHub-style heatmap, weeks as columns (Mon–Sun rows), from the first ride's month to today */
+const LEVELS = [10, 20, 34];                      // km/day: <10, <20 (one way), <34, ≥34 (round trip)
+const level = km => km <= 0 ? 0 : km < LEVELS[0] ? 1 : km < LEVELS[1] ? 2 : km < LEVELS[2] ? 3 : 4;
+function drawLog() {
+  const box = $('log'); box.innerHTML = '';
+  const a = dt(rides[0].start), today = new Date();
+  const first = new Date(a.getFullYear(), a.getMonth(), 1), start = mondayOf(first);
+  const end = new Date(Math.max(today, dt(latest.start)));
+  const weeks = Math.floor((mondayOf(end) - start) / 6048e5) + 1;
+  const labW = 22, topH = 18, gap = 3;
+  const W = box.clientWidth || 700;
+  const cell = Math.max(9, Math.min(16, Math.floor((W - labW) / weeks) - gap)), step = cell + gap;
+  const svg = el('svg', { width: labW + step * weeks, height: topH + step * 7, style: 'display:block;max-width:100%' }, box);
+  ['一', '三', '五', '日'].forEach((t, i) => { const x = el('text', { x: 0, y: topH + step * [0, 2, 4, 6][i] + cell - 2, class: 'axis-label' }, svg); x.textContent = t; });
+  const fills = ['--surface-3', '--heat-1', '--heat-2', '--heat-3', '--heat-4'].map(css);
+  let lastMonth = -1, daysRidden = 0;
+  for (let i = 0, d = new Date(start); d <= end; i++, d.setDate(d.getDate() + 1)) {
+    const w = Math.floor(i / 7), wd = i % 7, x = labW + w * step, y = topH + wd * step;
+    if (d.getMonth() !== lastMonth && d >= first) {
+      lastMonth = d.getMonth();
+      const t = el('text', { x: labW + (wd ? w + 1 : w) * step, y: 11, class: 'axis-label' }, svg); t.textContent = `${d.getMonth() + 1}月`;
+    }
+    if (d < first) continue;
+    const k = ymd(d), list = ridesByDay[k] || [], km = kmByDay[k] || 0;
+    if (km) daysRidden++;
+    const c = el('rect', { x, y, width: cell, height: cell, rx: 3, fill: fills[level(km)] }, svg);
+    if (ymd(d) === ymd(today)) c.setAttribute('stroke', css('--text-muted'));
+    const label = `${d.getMonth() + 1}月${d.getDate()}日 周${WD[d.getDay()]}`;
+    c.addEventListener('mousemove', e => showTip(list.length
+      ? `<b>${label}</b> · ${fmt(km, 1)} km<br>${list.map(r => `${hm(r.start)} ${rideName(r)} · ${fmt(r.dist, 1)} km`).join('<br>')}`
+      : `<b>${label}</b><br><span class="m">没有骑行</span>`, e.clientX, e.clientY));
+    c.addEventListener('mouseleave', hideTip);
+    if (list.length) { c.style.cursor = 'pointer'; c.addEventListener('click', () => { hideTip(); openRide(list[0].id); }); }
+  }
+  $('logAside').textContent = `${daysRidden} 天有骑行`;
+  $('logLegend').innerHTML = `少${fills.map(f => `<i style="background:${f}"></i>`).join('')}多`;
+}
+
+/* monthly distance */
+const months = [];
+{
+  const a = dt(rides[0].start), b = dt(latest.start);
+  for (let y = a.getFullYear(), m = a.getMonth(); y < b.getFullYear() || (y === b.getFullYear() && m <= b.getMonth()); m === 11 ? (y++, m = 0) : m++) months.push({ y, m, km: 0, n: 0, secs: 0 });
+  for (const r of rides) { const d = dt(r.start); const o = months.find(o => o.y === d.getFullYear() && o.m === d.getMonth()); o.km += r.dist; o.n++; o.secs += r.secs; }
+}
+function drawMonths() {
+  const box = $('months'); box.innerHTML = '';
+  const W = box.clientWidth || 600, H = 190, padL = 4, padR = 4, padT = 20, padB = 22;
+  const svg = el('svg', { width: W, height: H }, box);
+  const max = Math.max(...months.map(o => o.km)) * 1.05;
+  const bw = (W - padL - padR) / months.length, barW = Math.min(44, bw - 10);
+  const y = v => padT + (H - padT - padB) * (1 - v / max);
+  months.forEach((o, i) => {
+    const cx = padL + bw * i + bw / 2, top = y(o.km), h = y(0) - top;
+    if (o.km > 0) {
+      const r = Math.min(4, h, barW / 2);
+      el('path', { d: `M${cx - barW / 2},${y(0)}V${top + r}q0,-${r} ${r},-${r}H${cx + barW / 2 - r}q${r},0 ${r},${r}V${y(0)}Z`, fill: css('--accent') }, svg);
+      const t = el('text', { x: cx, y: top - 6, 'text-anchor': 'middle', class: 'val-label' }, svg); t.textContent = Math.round(o.km);
+    }
+    const lab = el('text', { x: cx, y: H - 5, 'text-anchor': 'middle', class: 'axis-label' }, svg); lab.textContent = `${o.m + 1}月`;
+    const hit = el('rect', { x: padL + bw * i, y: 0, width: bw, height: H, fill: 'transparent', style: 'cursor:pointer' }, svg);
+    hit.addEventListener('mousemove', e => showTip(`<b>${o.y}年${o.m + 1}月</b><br>${fmt(o.km, 1)} km · ${o.n} 次<br><span class="m">${durH(o.secs)} · 点击查看</span>`, e.clientX, e.clientY));
+    hit.addEventListener('mouseleave', hideTip);
+    hit.addEventListener('click', () => { hideTip(); feedFilter.month = `${o.y}-${o.m}`; feedShown = PAGE; feedDrawn = true; drawFeed(); scrollMemo.feed = 0; location.hash = 'feed'; });
+  });
+  el('line', { x1: padL, x2: W - padR, y1: y(0), y2: y(0), stroke: css('--axis'), 'stroke-width': 1 }, svg);
+}
+
+/* activity feed */
+const PAGE = 10;
+let feedShown = PAGE;
+const feedFilter = { type: 'all', month: 'all' };
+let miniMaps = [];
+const io = new IntersectionObserver(entries => {
+  for (const e of entries) if (e.isIntersecting) { io.unobserve(e.target); makeMini(e.target); }
+}, { rootMargin: '200px' });
+function makeMini(div) {
+  const r = byId[div.dataset.id];
+  if (!r.trk.length) { div.innerHTML = '<div class="muted" style="padding:16px;font-size:12px">无 GPS 轨迹</div>'; return; }
+  const m = L.map(div, { zoomControl: false, attributionControl: false, dragging: false, scrollWheelZoom: false, doubleClickZoom: false, boxZoom: false, keyboard: false, touchZoom: false, tap: false });
+  tileLayer().addTo(m);
+  const ll = PP(r.trk);
+  L.polyline(ll, { color: css('--surface-1'), weight: 6, opacity: 0.9, interactive: false }).addTo(m);
+  const pl = L.polyline(ll, { color: css('--route'), weight: 3, opacity: 1, interactive: false }).addTo(m);
+  m.fitBounds(pl.getBounds(), { padding: [14, 14] });
+  miniMaps.push(m);
+}
+const TYPES = [['all', '全部'], ['other', '非通勤'], ['commute', '通勤']];
+const SORTS = { new: r => r.start, dist: r => r.dist, avg: r => r.avg, gain: r => r.gain };
+if (TYPES.some(t => t[0] === store.get('xds.feedType'))) feedFilter.type = store.get('xds.feedType');
+feedFilter.sort = SORTS[store.get('xds.feedSort')] ? store.get('xds.feedSort') : 'new';
+const inMonth = r => { if (feedFilter.month === 'all') return true; const d = dt(r.start); return `${d.getFullYear()}-${d.getMonth()}` === feedFilter.month; };
+const ofType = (r, t) => t === 'all' || (t === 'commute') === !!r.commute;
+function feedList() {
+  const f = SORTS[feedFilter.sort];
+  return rides.filter(r => ofType(r, feedFilter.type) && inMonth(r)).sort((a, b) => (f(b) ?? -1) - (f(a) ?? -1));
+}
+const stat = (k, v, u) => `<div><div class="k">${k}</div><div class="v">${v}${u ? `<small>${u}</small>` : ''}</div></div>`;
+const actCard = r => `
+    <div class="card act" data-id="${r.id}">
+      <div class="info">
+        <div class="t"><div class="ico">${ICON}</div><div><div class="t1">${title(r)}${r.fixed ? ' <span class="badge">日期已修正</span>' : ''}${hrBadge(r)}${r.review ? ' <span class="badge accent">有点评</span>' : ''}</div><div class="t2">${dt(r.start).getFullYear()}年 · 周${WD[dt(r.start).getDay()]} · ${hm(r.start)}–${hm(r.end)}</div></div></div>
+        <div class="stats">${stat('距离', fmt(r.dist, 2), 'km')}${stat('用时', dur(r.secs))}${stat('均速', fmt(r.avg, 1), 'km/h')}${stat('爬升', fmt(r.gain), 'm')}${r.hr ? stat(hrSuspect(r) ? '心率（存疑）' : '心率', r.hr, 'bpm') : ''}</div>
+      </div>
+      <div class="mini" data-id="${r.id}"></div>
+    </div>`;
+function fillCards(box, list) {
+  box.innerHTML = list.map(actCard).join('') || '<div class="muted">没有符合条件的骑行</div>';
+  for (const c of box.querySelectorAll('.act')) c.onclick = () => openRide(c.dataset.id);
+  for (const d of box.querySelectorAll('.mini')) io.observe(d);
+}
+function clearMinis(box) {
+  miniMaps = miniMaps.filter(m => { if (box.contains(m.getContainer())) { m.remove(); return false; } return true; });
+}
+function drawRecent() { clearMinis($('recentList')); fillCards($('recentList'), rides.slice(-5).reverse()); }
+function drawFeed() {
+  clearMinis($('feedList'));
+  $('typeSeg').innerHTML = TYPES.map(([k, n]) => `<button data-t="${k}" class="${feedFilter.type === k ? 'on' : ''}">${n}<small>${rides.filter(r => ofType(r, k) && inMonth(r)).length}</small></button>`).join('');
+  for (const b of document.querySelectorAll('#typeSeg button')) b.onclick = () => { feedFilter.type = b.dataset.t; store.set('xds.feedType', b.dataset.t); feedShown = PAGE; drawFeed(); };
+  $('monthSel').value = feedFilter.month; $('sortSel').value = feedFilter.sort;
+  const list = feedList(), secs = sum(list, r => r.secs);
+  $('feedSum').innerHTML = list.length ? `<span><b>${list.length}</b> 次</span><span><b>${fmt(sum(list, r => r.dist), 1)}</b> km</span><span><b>${fmt(secs / 3600, 1)}</b> 小时</span><span>均速 <b>${fmt(sum(list, r => r.dist) / (secs / 3600), 1)}</b> km/h</span><span>爬升 <b>${fmt(sum(list, r => r.gain))}</b> m</span>` : '';
+  fillCards($('feedList'), list.slice(0, feedShown));
+  feedMoreText(list.length);
+}
+function feedMoreText(n) {
+  $('feedMore').innerHTML = n > feedShown ? '<span class="muted">加载中…</span>' : n > PAGE ? `<span class="muted">已经到底了 · 共 ${n} 次</span>` : '';
+}
+// infinite scroll: when the bottom sentinel comes near the viewport, append the next page (existing cards stay)
+const moreIO = new IntersectionObserver(entries => {
+  if (!entries[0].isIntersecting || $('viewFeed').hidden) return;
+  const list = feedList();
+  if (feedShown >= list.length) return;
+  const box = document.createElement('div');
+  fillCards(box, list.slice(feedShown, feedShown + PAGE));
+  feedShown += PAGE;
+  while (box.firstChild) $('feedList').appendChild(box.firstChild);
+  feedMoreText(list.length);
+  moreIO.unobserve($('feedMore')); moreIO.observe($('feedMore'));   // re-check: still in view → load another page
+}, { rootMargin: '400px' });
+moreIO.observe($('feedMore'));
+$('monthSel').innerHTML = '<option value="all">全部月份</option>' + months.slice().reverse().filter(o => o.n).map(o => `<option value="${o.y}-${o.m}">${o.y}年${o.m + 1}月</option>`).join('');
+$('monthSel').onchange = e => { feedFilter.month = e.target.value; feedShown = PAGE; drawFeed(); };
+$('sortSel').onchange = e => { feedFilter.sort = e.target.value; store.set('xds.feedSort', e.target.value); feedShown = PAGE; drawFeed(); };
+
+/* ============ RIDE DETAIL ============ */
+let rideMap = null, current = null, cursorMk = null;
+function openRide(id) { location.hash = 'ride/' + id; }
+function renderRide(r) {
+  current = r;
+  $('rIco').innerHTML = ICON.replace('width="20" height="20"', 'width="24" height="24"');
+  showTitle(r);
+  $('rMeta').textContent = metaLine(r);
+  $('rideIdx').textContent = `第 ${r.idx + 1} / ${rides.length} 次`;
+  const big = (v, u, k) => `<div><div class="v">${v}<small>${u}</small></div><div class="k">${k}</div></div>`;
+  $('rPrimary').innerHTML = big(fmt(r.dist, 2), 'km', '距离') + big(dur(r.secs), '', '运动时间') + big(fmt(r.gain), 'm', '爬升');
+  const row = (lab, a, b) => `<div class="lab">${lab}</div><div class="c">${a}</div><div class="c">${b}</div>`;
+  $('rSecondary').innerHTML = `<div></div><div class="c h">平均</div><div class="c h">最大</div>` +
+    row('速度', `${fmt(r.avg, 1)} km/h`, `${fmt(r.max, 1)} km/h`) +
+    row(hrSuspect(r) ? '心率 <span class="badge warn">存疑</span>' : '心率', r.hr ? `${r.hr} bpm` : '–', r.maxhr ? `${r.maxhr} bpm` : '–') +
+    row('功率', r.pw ? `${r.pw} W` : '–', r.maxpw ? `${r.maxpw} W` : '–') +
+    row('踏频', r.cad ? `${r.cad} rpm` : '–', '') +
+    row('热量', `${fmt(r.kcal)} kcal`, '') +
+    row('总用时', durH(r.end - r.start), '');
+  drawRideMap(r);
+  drawCharts(r);
+  drawSplits(r);
+  drawRideSegs(r);
+  drawReview(r);
+  const prev = rides[r.idx - 1], next = rides[r.idx + 1];
+  const pb = $('prevBtn'), nb = $('nextBtn');
+  pb.disabled = !prev; nb.disabled = !next;
+  pb.innerHTML = prev ? `<div class="k">← 上一次</div><div class="v">${md(prev.start)} ${rideName(prev)}</div>` : '';
+  nb.innerHTML = next ? `<div class="k">下一次 →</div><div class="v">${md(next.start)} ${rideName(next)}</div>` : '';
+  pb.onclick = () => prev && openRide(prev.id); nb.onclick = () => next && openRide(next.id);
+}
+const PENCIL = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>';
+function showTitle(r) {
+  $('rName').innerHTML = `${title(r)}${r.fixed ? ' <span class="badge">日期已修正</span>' : ''} <button class="editbtn" id="editName" title="改名">${PENCIL}</button>`;
+  $('editName').onclick = () => editTitle(r);
+}
+function editTitle(r) {
+  $('rName').innerHTML = `<span class="datepre">${md(r.start)}</span>
+    <form class="rename" id="renameForm">
+      <input id="nameInput" maxlength="40" value="${r.name ? esc(r.name) : ''}" placeholder="${autoName(r)}" aria-label="骑行名称">
+      <button type="submit" class="primarybtn">保存</button><button type="button" class="ghostbtn" id="nameCancel">取消</button>
+    </form>
+    <div class="renamehint">${r.name ? '<button type="button" class="linkbtn" id="nameReset">恢复自动名称</button> · ' : ''}${nameServer ? '保存到 names.json，重新生成页面也不会丢' : '这样打开时改名只存在本浏览器；双击「骑行记录.cmd」打开可写入 names.json'}</div>`;
+  const inp = $('nameInput'); inp.focus(); inp.select();
+  const done = async name => {
+    try { await saveName(r, name); showTitle(r); }
+    catch (e) { $('rName').querySelector('.renamehint').textContent = '保存失败：' + e.message; }
+  };
+  $('renameForm').onsubmit = e => { e.preventDefault(); done(inp.value); };
+  $('nameCancel').onclick = () => showTitle(r);
+  inp.onkeydown = e => { if (e.key === 'Escape') showTitle(r); };
+  if ($('nameReset')) $('nameReset').onclick = () => done('');
+}
+function drawRideMap(r) {
+  if (!rideMap) rideMap = L.map('rideMap', { zoomControl: true, scrollWheelZoom: true });
+  rideMap.eachLayer(l => rideMap.removeLayer(l));
+  tileLayer().addTo(rideMap);
+  cursorMk = L.circleMarker([0, 0], { radius: 7, color: css('--surface-1'), weight: 3, fillColor: css('--text-primary'), fillOpacity: 1 });
+  if (r.trk.length < 2) { rideMap.setView([34.2, 108.9], 11); return; }
+  const ll = PP(r.trk);
+  L.polyline(ll, { color: css('--surface-1'), weight: 8, opacity: 0.95 }).addTo(rideMap);
+  const pl = L.polyline(ll, { color: css('--route'), weight: 4.5, opacity: 1 }).addTo(rideMap);
+  const pin = (p, fill) => L.circleMarker(p, { radius: 7, color: css('--surface-1'), weight: 3, fillColor: fill, fillOpacity: 1 });
+  pin(ll[0], '#0ca30c').bindTooltip('起点').addTo(rideMap);
+  pin(ll[ll.length - 1], '#d03b3b').bindTooltip('终点').addTo(rideMap);
+  setTimeout(() => { rideMap.invalidateSize(); rideMap.fitBounds(pl.getBounds(), { padding: [28, 28] }); }, 0);
+}
+
+const SERIES = [
+  { key: 1, name: '海拔', unit: 'm', color: '--elev', d: 0, h: 120, area: true },
+  { key: 2, name: '速度', unit: 'km/h', color: '--speed', d: 1, h: 90 },
+  { key: 3, name: '心率', unit: 'bpm', color: '--hr', d: 0, h: 90 },
+  { key: 4, name: '功率', unit: 'W', color: '--power', d: 0, h: 90 },
+];
+function drawCharts(r) {
+  const box = $('rCharts'); box.innerHTML = '';
+  if (hrSuspect(r)) box.insertAdjacentHTML('beforeend', `<div class="hrnote"><span>⚠</span><span><b>心率带信号异常</b>：${esc(r.hrq.why.join('、'))}。这些时段的心率（图中斜线部分）已经去掉，平均、最高心率和每公里心率只用剩下的数据计算。</span></div>`);
+  const Pr = r.prof, maxD = Pr[Pr.length - 1][0] || 1;
+  const W = box.clientWidth || 800, padL = 40, padR = 12;
+  const x = d => padL + (W - padL - padR) * d / maxD;
+  const charts = [];
+  const legend = [];
+  for (const s of SERIES) {
+    const vals = Pr.map(p => p[s.key]).filter(v => v != null);
+    if (vals.length < 2) continue;
+    legend.push(`<span><i style="background:var(${s.color})"></i>${s.name}</span>`);
+    const avg = vals.reduce((a, b) => a + b, 0) / vals.length;
+    const head = document.createElement('div'); head.className = 'ptitle';
+    head.innerHTML = `<span>${s.name}（${s.unit}）</span><span>平均 <b>${fmt(avg, s.d)}</b></span>`;
+    box.appendChild(head);
+    const H = s.h, padT = 6, padB = s === SERIES[SERIES.length - 1] || true ? 18 : 4;
+    const svg = el('svg', { width: W, height: H, style: 'display:block' }, box);
+    let lo = Math.min(...vals), hi = Math.max(...vals);
+    if (s.key !== 1) lo = 0; else { const p = Math.max(5, (hi - lo) * 0.15); lo = Math.floor((lo - p) / 5) * 5; hi = Math.ceil((hi + p) / 5) * 5; }
+    if (hi - lo < 1) hi = lo + 1;
+    const y = v => padT + (H - padT - padB) * (1 - (v - lo) / (hi - lo));
+    for (const t of [lo, (lo + hi) / 2, hi]) {
+      el('line', { x1: padL, x2: W - padR, y1: y(t), y2: y(t), stroke: css('--grid'), 'stroke-width': 1 }, svg);
+      const tx = el('text', { x: padL - 6, y: y(t) + 4, 'text-anchor': 'end', class: 'axis-label' }, svg); tx.textContent = Math.round(t);
+    }
+    const stepK = maxD > 40 ? 10 : maxD > 15 ? 5 : maxD > 6 ? 2 : 1;
+    for (let k = 0; k <= maxD + 1e-9; k += stepK) { const tx = el('text', { x: x(k), y: H - 3, 'text-anchor': k === 0 ? 'start' : 'middle', class: 'axis-label' }, svg); tx.textContent = k === 0 ? '0 km' : k; }
+    let d = '', on = false, area = '';
+    for (const p of Pr) { const v = p[s.key]; if (v == null) { on = false; continue; } d += `${on ? 'L' : 'M'}${x(p[0]).toFixed(1)},${y(v).toFixed(1)}`; on = true; }
+    if (s.area) { area = d + `L${x(maxD).toFixed(1)},${y(lo)}L${x(0)},${y(lo)}Z`; el('path', { d: area, fill: css('--elev-fill') }, svg); }
+    el('path', { d, fill: 'none', stroke: css(s.color), 'stroke-width': s.area ? 2 : 1.5, 'stroke-linejoin': 'round' }, svg);
+    const vline = el('line', { y1: padT, y2: H - padB, stroke: css('--text-muted'), 'stroke-width': 1, visibility: 'hidden' }, svg);
+    const dot = el('circle', { r: 4, fill: css(s.color), stroke: css('--surface-1'), 'stroke-width': 2, visibility: 'hidden' }, svg);
+    if (s.key === 3 && r.hrq && r.hrq.segs.length) {   // stretches where the strap misread: left out
+      for (const [a, b] of r.hrq.segs) el('rect', { x: x(a), y: padT, width: Math.max(1.5, x(b) - x(a)), height: H - padT - padB, fill: 'url(#hatch)' }, svg);
+      head.innerHTML = `<span>${s.name}（${s.unit}）<span class="badge warn" style="margin-left:6px">${r.hrq.pct}% 已去除</span></span><span>平均 <b>${fmt(avg, s.d)}</b></span>`;
+      const defs = el('defs', {}, svg); const pat = el('pattern', { id: 'hatch', width: 6, height: 6, patternUnits: 'userSpaceOnUse', patternTransform: 'rotate(45)' }, defs);
+      el('rect', { width: 6, height: 6, fill: css('--surface-2') }, pat); el('line', { x1: 0, y1: 0, x2: 0, y2: 6, stroke: css('--axis'), 'stroke-width': 1.5 }, pat);
+      svg.insertBefore(defs, svg.firstChild);
+    }
+    const hit = el('rect', { x: padL, y: 0, width: W - padL - padR, height: H, fill: 'transparent', style: 'cursor:crosshair' }, svg);
+    charts.push({ s, y, vline, dot, hit, svg, head, avg });
+  }
+  $('rLegend').innerHTML = legend.join('');
+  const idxAt = dist => { let lo = 0, hi = Pr.length - 1; while (lo < hi) { const m = (lo + hi) >> 1; Pr[m][0] < dist ? lo = m + 1 : hi = m; } return lo; };
+  const move = (e, c) => {
+    const rect = c.svg.getBoundingClientRect();
+    const dist = Math.max(0, Math.min(maxD, (e.clientX - rect.left - padL) / (W - padL - padR) * maxD));
+    const p = Pr[idxAt(dist)];
+    const rows = [];
+    for (const k of charts) {
+      const v = p[k.s.key];
+      k.vline.setAttribute('x1', x(p[0])); k.vline.setAttribute('x2', x(p[0])); k.vline.setAttribute('visibility', 'visible');
+      if (v != null) { k.dot.setAttribute('cx', x(p[0])); k.dot.setAttribute('cy', k.y(v)); }
+      k.dot.setAttribute('visibility', v == null ? 'hidden' : 'visible');
+      rows.push(`<i style="background:var(${k.s.color})"></i>${k.s.name} <b>${fmt(v, k.s.d)}</b> ${k.s.unit}`);
+    }
+    showTip(`<b>${fmt(p[0], 2)} km</b><br>${rows.join('<br>')}`, e.clientX, e.clientY);
+    if (p[5] != null) cursorMk.setLatLng(P([p[5], p[6]])).addTo(rideMap);
+  };
+  const leave = () => { hideTip(); cursorMk.remove(); for (const k of charts) { k.vline.setAttribute('visibility', 'hidden'); k.dot.setAttribute('visibility', 'hidden'); } };
+  for (const c of charts) { c.hit.addEventListener('mousemove', e => move(e, c)); c.hit.addEventListener('mouseleave', leave); }
+}
+function drawSplits(r) {
+  const S = r.splits || [];
+  if (!S.length) { $('rSplits').innerHTML = '<tr><td class="muted">无分段数据</td></tr>'; return; }
+  const maxV = Math.max(...S.map(s => s[2] || 0)), minV = Math.min(...S.filter(s => s[2]).map(s => s[2]));
+  const hasHr = S.some(s => s[4]), hasPw = S.some(s => s[5] != null);
+  const best = S.reduce((b, s) => (s[0] >= 0.99 && (s[2] || 0) > (b[2] || 0)) ? s : b, S[0]);
+  let km = 0;
+  $('rSplits').innerHTML = `<tr><th>公里</th><th>用时</th><th style="text-align:left">速度 km/h</th><th>爬升</th>${hasHr ? '<th class="hide-s">心率</th>' : ''}${hasPw ? '<th class="hide-s">功率</th>' : ''}</tr>` +
+    S.map(s => {
+      km += s[0];
+      const w = s[2] ? 12 + (s[2] - minV) / Math.max(1, maxV - minV) * 88 : 0;
+      return `<tr class="${s === best ? 'fast' : ''}"><td>${s[0] < 0.99 ? fmt(km, 1) : Math.round(km)}</td><td>${dur(s[1])}</td>
+        <td class="bar"><div><i style="width:${w}%"></i><span>${fmt(s[2], 1)}${s === best ? ' <span class="badge accent">最快</span>' : ''}</span></div></td>
+        <td>${s[3] == null ? '–' : (s[3] > 0 ? '+' : '') + s[3] + ' m'}</td>${hasHr ? `<td class="hide-s">${fmt(s[4])}</td>` : ''}${hasPw ? `<td class="hide-s">${fmt(s[5])} W</td>` : ''}</tr>`;
+    }).join('');
+}
+
+/* ============ TRENDS ============ */
+// Commutes on the same route are the fair comparison; HR at 110 W skips rides whose HR is flagged (r.fit.hr110 absent).
+const monthKey = s => { const d = dt(s); return `${d.getFullYear()}-${pad(d.getMonth() + 1)}`; };
+const monthMid = k => { const [y, m] = k.split('-').map(Number); return new Date(y, m - 1, 15).getTime() / 1000; };
+const mean = a => a.reduce((x, y) => x + y, 0) / a.length;
+const median = a => { const b = a.slice().sort((x, y) => x - y), n = b.length; return n % 2 ? b[(n - 1) / 2] : (b[n / 2 - 1] + b[n / 2]) / 2; };
+function monthly(list, get, agg = mean) {
+  const g = {};
+  for (const r of list) { const v = get(r); if (v != null) (g[monthKey(r.start)] = g[monthKey(r.start)] || []).push(v); }
+  return Object.keys(g).sort().map(k => ({ k, t: monthMid(k), v: agg(g[k]), n: g[k].length }));
+}
+function legend(id, items) {
+  $(id).innerHTML = items.map(([c, n, shape]) => `<span><i class="${shape || 'dot'}" style="background:var(${c})"></i>${n}</span>`).join('');
+}
+/* one time-axis chart: dots (per ride) and/or lines (per month) */
+function timeChart(box, { dots = [], lines = [], unit, d = 0, height = 220, zeroBase = false, fv = null }) {
+  box.innerHTML = '';
+  const F = fv || (v => fmt(v, d));
+  const W = box.clientWidth || 600, H = height, padL = 40, padR = 46, padT = 10, padB = 24;
+  const svg = el('svg', { width: W, height: H, style: 'display:block' }, box);
+  const all = [...dots.map(p => p.v), ...lines.flatMap(l => l.pts.map(p => p.v))];
+  const ts = [...dots.map(p => p.t), ...lines.flatMap(l => l.pts.map(p => p.t))];
+  if (!all.length) { box.innerHTML = '<div class="muted" style="padding:24px 0">数据不够</div>'; return; }
+  let lo = zeroBase ? 0 : Math.min(...all), hi = Math.max(...all);
+  const padV = (hi - lo) * 0.12 || 5; if (!zeroBase) lo -= padV; hi += padV;
+  const t0d = new Date(Math.min(...ts) * 1000), t1d = new Date(Math.max(...ts) * 1000);
+  const t0 = new Date(t0d.getFullYear(), t0d.getMonth(), 1).getTime() / 1000, t1 = new Date(t1d.getFullYear(), t1d.getMonth() + 1, 1).getTime() / 1000;
+  const x = t => padL + (W - padL - padR) * (t - t0) / (t1 - t0), y = v => padT + (H - padT - padB) * (1 - (v - lo) / (hi - lo));
+  const step = (hi - lo) > 60 ? 20 : (hi - lo) > 24 ? 10 : (hi - lo) > 8 ? 2 : 1;
+  for (let v = Math.ceil(lo / step) * step; v <= hi; v += step) {
+    el('line', { x1: padL, x2: W - padR, y1: y(v), y2: y(v), stroke: css('--grid'), 'stroke-width': 1 }, svg);
+    const tx = el('text', { x: padL - 6, y: y(v) + 4, 'text-anchor': 'end', class: 'axis-label' }, svg); tx.textContent = fv ? F(v) : v;
+  }
+  for (let m = new Date(t0 * 1000); m.getTime() / 1000 < t1; m.setMonth(m.getMonth() + 1)) {
+    const tx = el('text', { x: x(m.getTime() / 1000 + 14 * 86400), y: H - 6, 'text-anchor': 'middle', class: 'axis-label' }, svg); tx.textContent = `${m.getMonth() + 1}月`;
+  }
+  for (const p of dots) {
+    if (p.ring) el('circle', { cx: x(p.t), cy: y(p.v), r: 7, fill: 'none', stroke: css('--text-primary'), 'stroke-width': 1.5 }, svg);
+    const c = el('circle', { cx: x(p.t), cy: y(p.v), r: 3.5, fill: css(p.c), 'fill-opacity': 0.55, stroke: css('--surface-1'), 'stroke-width': 1 }, svg);
+    const hit = el('circle', { cx: x(p.t), cy: y(p.v), r: 8, fill: 'transparent', style: p.ride ? 'cursor:pointer' : '' }, svg);
+    hit.addEventListener('mousemove', e => { c.setAttribute('fill-opacity', 1); c.setAttribute('r', 5); showTip(`<b>${p.ride ? esc(title(p.ride).replace(/&amp;/g, '&')) : ''}</b><br>${p.label || ''}<b>${F(p.v)}</b> ${unit}`, e.clientX, e.clientY); });
+    hit.addEventListener('mouseleave', () => { c.setAttribute('fill-opacity', 0.55); c.setAttribute('r', 3.5); hideTip(); });
+    if (p.ride) hit.addEventListener('click', () => { hideTip(); openRide(p.ride.id); });
+  }
+  for (const l of lines) {
+    if (!l.pts.length) continue;
+    el('path', { d: l.pts.map((p, i) => `${i ? 'L' : 'M'}${x(p.t).toFixed(1)},${y(p.v).toFixed(1)}`).join(''), fill: 'none', stroke: css(l.c), 'stroke-width': 2, 'stroke-linejoin': 'round' }, svg);
+    for (const p of l.pts) {
+      el('circle', { cx: x(p.t), cy: y(p.v), r: 4.5, fill: css(l.c), stroke: css('--surface-1'), 'stroke-width': 2 }, svg);
+      const hit = el('circle', { cx: x(p.t), cy: y(p.v), r: 10, fill: 'transparent' }, svg);
+      hit.addEventListener('mousemove', e => showTip(`<b>${p.k.replace('-', '年')}月 · ${l.name}</b><br><b>${F(p.v)}</b> ${unit}${p.n ? `<span class="m"> · ${p.n} 次</span>` : ''}`, e.clientX, e.clientY));
+      hit.addEventListener('mouseleave', hideTip);
+    }
+    const last = l.pts[l.pts.length - 1];   // direct label at the line end
+    const tx = el('text', { x: x(last.t) + 8, y: y(last.v) + 4, class: 'val-label' }, svg); tx.textContent = F(last.v);
+  }
+}
+function drawTrends() {
+  const isAM = r => dt(r.start).getHours() < 12;
+  const com = rides.filter(r => r.commute && r.dist > 14 && r.fit);
+  const ride = (r, v, c, label = '') => ({ t: r.start, v, c, ride: r, label });
+  const DAY = 86400;
+  const now = Date.now() / 1000;
+  const recent = (list, f, days = 30) => { const v = list.filter(r => r.start >= now - days * DAY).map(f).filter(x => x != null); return v.length ? median(v) : null; };
+  const first = (list, f, n = 6) => { const v = list.map(f).filter(x => x != null).slice(0, n); return v.length ? median(v) : null; };
+
+  /* ---- 心肺 ---- */
+  // 1) same-power heart rate: ride HR after warm-up, moved to 100 W with the between-ride slope; mornings and evenings apart
+  const adj = r => r.fit.ahr != null && r.fit.apw != null ? r.fit.ahr - HR_PER_W * (r.fit.apw - 100) : null;
+  const am = com.filter(r => isAM(r) && adj(r) != null), pm = com.filter(r => !isAM(r) && adj(r) != null);
+  legend('lgNhr', [['--speed', '上班'], ['--accent', '下班'], ['--speed', '上班月中位数', 'bar'], ['--accent', '下班月中位数', 'bar']]);
+  timeChart($('tNhr'), { unit: 'bpm', d: 0,
+    dots: [...am.map(r => ride(r, adj(r), '--speed', '换算到 100 W：')), ...pm.map(r => ride(r, adj(r), '--accent', '换算到 100 W：'))],
+    lines: [{ name: '上班', c: '--speed', pts: monthly(am, adj, median) }, { name: '下班', c: '--accent', pts: monthly(pm, adj, median) }] });
+
+  // 2) heart-rate recovery at red lights
+  const hrrR = rides.filter(r => r.fit && r.fit.hrr != null);
+  legend('lgHrr', [['--hr', '每次骑行（中位数）'], ['--text-primary', '月中位数', 'bar']]);
+  timeChart($('tHrr'), { unit: 'bpm', d: 1,
+    dots: hrrR.map(r => ride(r, r.fit.hrr, '--hr', `${r.fit.hrr_n} 次停车，心率中位数降了 `)),
+    lines: [{ name: '月中位数', c: '--text-primary', pts: monthly(hrrR, r => r.fit.hrr, median) }] });
+
+  // 3) the morning climb: end HR at a common power
+  const climb = SEGS.find(s => s.id === 'home-climb');
+  const cE = climb ? climb.efforts.filter(e => e.hr_norm != null) : [];
+  legend('lgClimb', [['--aqua', '每次上班'], ['--text-primary', '月中位数', 'bar']]);
+  timeChart($('tClimb'), { unit: 'bpm', d: 0,
+    dots: cE.map(e => ({ t: e.ride.start, v: e.hr_norm, c: '--aqua', ride: e.ride, label: `坡上 ${e.pw} W，坡顶 ${e.hr_end} bpm → 换算 ` })),
+    lines: [{ name: '月中位数', c: '--text-primary', pts: monthly(cE.map(e => ({ start: e.ride.start, v: e.hr_norm })), x => x.v, median) }] });
+  $('climbFoot').textContent = climb ? `坡顶心率换算到 ${climb.norm_power || 110} W。按目标骑（前缓后快）时，这个数会更稳定。` : '';
+
+  /* ---- 力量 ---- */
+  const zb = SEGS.find(s => s.id === 'zhangba-east');
+  const zE = zb ? zb.efforts.filter(e => e.pw != null) : [];
+  legend('lgZb', [['--accent', '平时'], ['--power', '强度日'], ['--text-primary', '当月最高', 'bar']]);
+  timeChart($('tZb'), { unit: 'W', d: 0,
+    dots: zE.map(e => ({ t: e.ride.start, v: e.pw, c: e.hard ? '--power' : '--accent', ride: e.ride, ring: e.hard, label: `${mmss(e.secs)} · ` })),
+    lines: [{ name: '当月最高', c: '--text-primary', pts: monthly(zE.map(e => ({ start: e.ride.start, v: e.pw })), x => x.v, a => Math.max(...a)) }] });
+  $('zbFoot').textContent = zb && zb.hard_min_power ? `功率 ≥${zb.hard_min_power} W 算强度日（目标 ${(zb.targets || []).find(t => t.label.startsWith('强度日'))?.power || ''}）。` : '';
+
+  const pwRides = rides.filter(r => r.fit && r.fit.b1 != null);
+  const BEST = [['b1', '1 分钟', '--accent'], ['b5', '5 分钟', '--speed']];
+  legend('lgBest', BEST.map(([, n, c]) => [c, n, 'bar']));
+  timeChart($('tBest'), { unit: 'W', d: 0, lines: BEST.map(([k, n, c]) => ({ name: n, c, pts: monthly(pwRides, r => r.fit[k], a => Math.max(...a)) })) });
+
+  /* ---- 训练量 ---- */
+  // weekly riding hours (bars) and the 6-week load: exponentially weighted daily work (kJ), τ = 42 days
+  const byDayKj = {};
+  for (const r of rides) if (r.fit && r.fit.kj) byDayKj[ymd(dt(r.start))] = (byDayKj[ymd(dt(r.start))] || 0) + r.fit.kj;
+  const d0 = mondayOf(dt(rides[0].start)), ctlPts = [];
+  let ctl = 0;
+  for (let d = new Date(d0); d <= new Date(); d.setDate(d.getDate() + 1)) {
+    ctl += ((byDayKj[ymd(d)] || 0) - ctl) / 42;
+    if (d.getDay() === 0) ctlPts.push({ t: d.getTime() / 1000, v: Math.round(ctl), k: ymd(d) });
+  }
+  const weeks = [];
+  for (let m = new Date(d0); m <= new Date(); m.setDate(m.getDate() + 7)) {
+    const end = new Date(m); end.setDate(end.getDate() + 7);
+    const rs = rides.filter(r => r.start * 1000 >= m && r.start * 1000 < end);
+    weeks.push({ t: m.getTime() / 1000 + 3.5 * DAY, h: rs.reduce((s, r) => s + r.secs, 0) / 3600, n: new Set(rs.map(r => ymd(dt(r.start)))).size, m: new Date(m) });
+  }
+  weekBars($('tWeek'), weeks);
+  legend('lgCtl', [['--text-primary', '训练量', 'bar']]);
+  timeChart($('tCtl'), { unit: '', d: 0, zeroBase: true, lines: [{ name: '训练量', c: '--text-primary', pts: ctlPts.map(p => ({ ...p, k: p.k.slice(0, 7) })) }] });
+  const peak = ctlPts.reduce((a, b) => (b.v > a.v ? b : a), ctlPts[0]);
+  $('ctlFoot').textContent = peak ? `最高 ${peak.v}（${md(peak.t)} 那周）。停骑两周以上会明显往下掉，各项体能指标也会跟着变差。` : '';
+
+  /* ---- 通勤表现（参考） ---- */
+  const amR = com.filter(isAM), pmR = com.filter(r => !isAM(r));
+  legend('lgSpd', [['--speed', '上班'], ['--accent', '下班']]);
+  timeChart($('tSpd'), { unit: 'km/h', d: 1,
+    dots: [...amR.map(r => ride(r, r.fit.mspd, '--speed')), ...pmR.map(r => ride(r, r.fit.mspd, '--accent'))].filter(p => p.v),
+    lines: [{ name: '上班', c: '--speed', pts: monthly(amR, r => r.fit.mspd) }, { name: '下班', c: '--accent', pts: monthly(pmR, r => r.fit.mspd) }] });
+  legend('lgPw', [['--speed', '上班'], ['--accent', '下班']]);
+  timeChart($('tPw'), { unit: 'W', d: 0,
+    dots: [...amR.filter(r => r.fit.mpw != null).map(r => ride(r, r.fit.mpw, '--speed')), ...pmR.filter(r => r.fit.mpw != null).map(r => ride(r, r.fit.mpw, '--accent'))],
+    lines: [{ name: '上班', c: '--speed', pts: monthly(amR.filter(r => r.fit.mpw != null), r => r.fit.mpw) }, { name: '下班', c: '--accent', pts: monthly(pmR.filter(r => r.fit.mpw != null), r => r.fit.mpw) }] });
+
+  /* ---- headline tiles: last 30 days vs the first rides ---- */
+  const tile = (k, a, b, u, dd, lowerBetter, extra) => {
+    if (b == null) return `<div class="card tile2"><div class="k">${k}</div><div class="v">–</div><div class="dl flat">${extra}</div></div>`;
+    const diff = a == null ? 0 : b - a, good = lowerBetter ? diff < 0 : diff > 0;
+    return `<div class="card tile2"><div class="k">${k}</div><div class="v">${fmt(b, dd)}<small>${u}</small></div>
+      <div class="dl ${a == null || Math.abs(diff) < (dd ? 0.5 : 1) ? 'flat' : good ? 'up' : 'down'}">${a == null ? '' : `${diff >= 0 ? '+' : ''}${fmt(diff, dd)} ${u} `}<span class="muted">${extra}</span></div></div>`;
+  };
+  const hardBest = zE.filter(e => e.hard).reduce((a, e) => (a == null || e.pw > a.pw ? e : a), null);
+  $('trendTiles').innerHTML =
+    tile('同功率心率（上班）', first(am, adj), recent(am, adj), 'bpm', 0, true, '近 30 天 vs 最初 6 次') +
+    tile('红灯心率恢复', first(hrrR, r => r.fit.hrr), recent(hrrR, r => r.fit.hrr), 'bpm', 1, false, '近 30 天 vs 最初 6 次') +
+    tile('丈八东路强度日', null, hardBest ? hardBest.pw : null, 'W', 0, false, hardBest ? `最好一次 ${md(hardBest.ride.start)} · ${mmss(hardBest.secs)}` : '还没有强度日，目标 170–190 W') +
+    tile('训练量', peak ? peak.v : null, ctlPts.length ? ctlPts[ctlPts.length - 1].v : null, '', 0, false, peak ? `最高时的 ${Math.round(ctlPts[ctlPts.length - 1].v / peak.v * 100)}%` : '');
+  $('trendNote').textContent = `${com.length} 次通勤 · 心率存疑的骑行不参与心率指标`;
+}
+function weekBars(box, weeks) {
+  box.innerHTML = '';
+  const W = box.clientWidth || 600, H = 200, padL = 32, padR = 12, padT = 10, padB = 24;
+  const svg = el('svg', { width: W, height: H, style: 'display:block' }, box);
+  const max = Math.max(4, ...weeks.map(w => w.h)) * 1.1;
+  const bw = (W - padL - padR) / weeks.length, barW = Math.max(3, bw - 2);
+  const y = v => padT + (H - padT - padB) * (1 - v / max);
+  for (let v = 0; v <= max; v += max > 8 ? 2 : 1) {
+    el('line', { x1: padL, x2: W - padR, y1: y(v), y2: y(v), stroke: css('--grid'), 'stroke-width': 1 }, svg);
+    const t = el('text', { x: padL - 6, y: y(v) + 4, 'text-anchor': 'end', class: 'axis-label' }, svg); t.textContent = v;
+  }
+  let lastM = -1;
+  weeks.forEach((w, i) => {
+    const x = padL + i * bw;
+    if (w.h > 0) {
+      const top = y(w.h), r = Math.min(3, (y(0) - top) / 2);
+      el('path', { d: `M${x},${y(0)}V${top + r}q0,-${r} ${r},-${r}H${x + barW - r}q${r},0 ${r},${r}V${y(0)}Z`, fill: css(w.n >= 3 ? '--accent' : '--heat-2') }, svg);
+    }
+    if (w.m.getMonth() !== lastM && w.m.getDate() <= 7) { lastM = w.m.getMonth(); const t = el('text', { x, y: H - 6, class: 'axis-label' }, svg); t.textContent = `${w.m.getMonth() + 1}月`; }
+    const hit = el('rect', { x, y: 0, width: bw, height: H - padB, fill: 'transparent' }, svg);
+    hit.addEventListener('mousemove', e => showTip(`<b>${w.m.getMonth() + 1}/${w.m.getDate()} 那周</b><br>${fmt(w.h, 1)} 小时 · ${w.n} 天骑车`, e.clientX, e.clientY));
+    hit.addEventListener('mouseleave', hideTip);
+  });
+}
+
+/* ============ SEGMENTS ============ */
+const mmss = s => `${Math.floor(s / 60)}:${pad(Math.round(s % 60))}`;
+// bpm per extra watt between rides, from a regression of ride HR on power and training load (see README)
+const HR_PER_W = 0.27;
+const SEGS = (DATA.segments || []).map(sd => {
+  const efforts = rides.flatMap(r => (r.segs || []).filter(e => e.sid === sd.id).map(e => ({ ...e, ride: r })))
+    .sort((a, b) => a.ts - b.ts);
+  let best = Infinity;
+  for (const e of efforts) {
+    e.pr = e.secs < best; best = Math.min(best, e.secs);                     // faster than every earlier pass
+    e.hard = sd.hard_min_power != null && e.pw != null && e.pw >= sd.hard_min_power;
+    // end-of-segment HR moved to a common power, so passes ridden harder or easier compare fairly
+    e.hr_norm = e.hr_end != null && e.pw != null ? Math.round((e.hr_end - HR_PER_W * (e.pw - (sd.norm_power || 110))) * 10) / 10 : null;
+  }
+  const ranked = efforts.slice().sort((a, b) => a.secs - b.secs || a.ts - b.ts);
+  ranked.forEach((e, i) => { e.rank = i + 1; });
+  return { ...sd, efforts, ranked };
+});
+const segMetric = {};
+const segMetrics = sg => [
+  ['secs', '用时', '秒', v => mmss(v), true], ['spd', '速度', 'km/h', v => fmt(v, 1)],
+  ['pw', '功率', 'W', v => fmt(v)], ['hr', '心率', 'bpm', v => fmt(v)],
+  ['hr_norm', '同功率心率', 'bpm', v => fmt(v), true, `坡顶心率换算到 ${sg.norm_power || 110} W；越低说明心肺越好`],
+];
+const targetsHtml = sg => (sg.targets && sg.targets.length) ? `<div class="segtargets">
+    <span class="tt">目标</span>${sg.targets.map(t => `<span class="tg"><b>${esc(t.power)}</b> ${esc(t.label)}${t.text ? `<span class="muted"> · ${esc(t.text)}</span>` : ''}</span>`).join('')}
+    ${sg.hr ? `<span class="tg hrtg">♥ ${esc(sg.hr)}</span>` : ''}</div>` : '';
+let segMaps = [];
+function drawSegments() {
+  for (const m of segMaps) m.remove(); segMaps = [];
+  const box = $('segList');
+  if (!SEGS.length) { box.innerHTML = '<div class="card bd muted">还没有路段，在 rides/segments.json 里添加</div>'; return; }
+  box.innerHTML = SEGS.map((sg, si) => {
+    const E = sg.efforts, R = sg.ranked;
+    const head = `<div class="hd"><h2>${esc(sg.name)}</h2><span class="aside">${esc(sg.note || '')}${E.length ? ` · ${Math.round(mean(E.map(e => e.dist)))} m` : ''}</span></div>`;
+    if (!E.length) return `<div class="card segcard">${head}<div class="bd">${targetsHtml(sg)}<div class="muted">还没有经过记录</div></div></div>`;
+    const last = E[E.length - 1], best = R[0];
+    const split = E.some(e => e.pw1 != null), hard = sg.hard_min_power != null;
+    const hardE = E.filter(e => e.hard);
+    const stat4 = hard
+      ? `<div><div class="k">强度日</div><div class="v">${hardE.length}<small>次</small></div><div class="s">${hardE.length ? `最近 ${md(hardE[hardE.length - 1].ride.start)} · ${hardE[hardE.length - 1].pw} W` : `功率 ≥${sg.hard_min_power} W 算强度日`}</div></div>`
+      : split ? `<div><div class="k">最近一次 前半 / 后半</div><div class="v">${last.pw1 ?? '–'}<small>W</small> / ${last.pw2 ?? '–'}<small>W</small></div><div class="s">${last.pw1 != null && last.pw2 != null ? (last.pw2 >= last.pw1 ? '前缓后快 ✓' : '前快后慢，前半段可以再收一点') : ''}</div></div>`
+      : `<div><div class="k">个人纪录</div><div class="v">${E.filter(e => e.pr).length}<small>次</small></div><div class="s">刷新最快纪录的次数</div></div>`;
+    return `<div class="card segcard">${head}
+      <div class="bd">
+        ${targetsHtml(sg)}
+        <div class="segtop">
+          <div class="segmap" id="segMap${si}"></div>
+          <div class="segstats">
+            <div><div class="k">最快</div><div class="v">${mmss(best.secs)}</div><div class="s">${md(best.ride.start)} · ${fmt(best.spd, 1)} km/h</div></div>
+            <div><div class="k">最近一次</div><div class="v">${mmss(last.secs)}</div><div class="s">${md(last.ride.start)} · ${last.pw != null ? last.pw + ' W · ' : ''}第 ${last.rank} / ${E.length}</div></div>
+            <div><div class="k">平均用时</div><div class="v">${mmss(mean(E.map(e => e.secs)))}</div><div class="s">${E.length} 次通过</div></div>
+            ${stat4}
+          </div>
+        </div>
+        <div class="seghead"><div class="seg" id="segMet${si}">${segMetrics(sg).filter(m => m[0] !== 'hr_norm' || E.some(e => e.hr_norm != null)).map(([k, n]) => `<button data-k="${k}">${n}</button>`).join('')}</div>
+          <div class="tlegend"><span><i class="dot" style="background:var(--accent)"></i>每次通过</span>${hard ? '<span><i class="dot" style="background:var(--power)"></i>强度日</span>' : ''}<span><i class="ringk"></i>当时的个人纪录</span><span><i class="bar" style="background:var(--text-primary)"></i>月中位数</span></div></div>
+        <div id="segChart${si}"></div>
+        <div class="muted tfoot" id="segFoot${si}"></div>
+        <div class="tablewrap seglb"><table class="splits"><tr><th>#</th><th>日期</th><th>用时</th><th>速度</th><th>功率</th>${split ? '<th class="hide-s">前半 / 后半</th>' : ''}<th>心率</th><th class="hide-s">踏频</th></tr>
+          ${R.map(e => `<tr class="lbrow${e === last ? ' latest' : ''}" data-id="${e.ride.id}"><td>${e.rank <= 3 ? `<span class="medal m${e.rank}">${e.rank}</span>` : e.rank}</td>
+            <td>${md(e.ride.start)} 周${WD[dt(e.ride.start).getDay()]}${e.pr ? ' <span class="badge accent">纪录</span>' : ''}${e.hard ? ' <span class="badge hard">强度日</span>' : ''}</td><td><b>${mmss(e.secs)}</b></td><td>${fmt(e.spd, 1)} km/h</td>
+            <td>${e.pw != null ? fmt(e.pw) + ' W' : '–'}</td>${split ? `<td class="hide-s">${e.pw1 != null ? `${e.pw1} / ${e.pw2} W ${e.pw2 >= e.pw1 ? '<span class="ok">✓</span>' : ''}` : '–'}</td>` : ''}
+            <td>${e.hr != null ? e.hr : hrSuspect(e.ride) ? '<span class="muted" title="这次心率带数据存疑">存疑</span>' : '–'}</td><td class="hide-s">${e.cad}</td></tr>`).join('')}
+        </table></div>
+      </div></div>`;
+  }).join('');
+  SEGS.forEach((sg, si) => {
+    if (!sg.efforts.length) return;
+    const best = sg.ranked[0], P = best.ride.prof.filter(p => p[5] != null && p[0] >= best.km[0] - 0.03 && p[0] <= best.km[1] + 0.03);
+    const mp = L.map($('segMap' + si), { zoomControl: false, attributionControl: false, scrollWheelZoom: false, dragging: false, doubleClickZoom: false });
+    tileLayer().addTo(mp);
+    const ll = PP(P.map(p => [p[5], p[6]]));
+    if (ll.length > 1) {
+      L.polyline(ll, { color: css('--surface-1'), weight: 9 }).addTo(mp);
+      const pl = L.polyline(ll, { color: css('--accent'), weight: 5 }).addTo(mp);
+      L.circleMarker(ll[0], { radius: 6, color: css('--surface-1'), weight: 2, fillColor: '#0ca30c', fillOpacity: 1 }).bindTooltip('起点').addTo(mp);
+      L.circleMarker(ll[ll.length - 1], { radius: 6, color: css('--surface-1'), weight: 2, fillColor: '#d03b3b', fillOpacity: 1 }).bindTooltip('终点').addTo(mp);
+      setTimeout(() => { mp.invalidateSize(); mp.fitBounds(pl.getBounds(), { padding: [20, 20] }); }, 0);
+    }
+    segMaps.push(mp);
+    const draw = () => {
+      const key = segMetric[sg.id] || sg.metric || 'secs';
+      const [, name, unit, fv, lowerBetter, note] = segMetrics(sg).find(m => m[0] === key);
+      for (const b of $('segMet' + si).querySelectorAll('button')) b.classList.toggle('on', b.dataset.k === key);
+      const E = sg.efforts.filter(e => e[key] != null);
+      timeChart($('segChart' + si), { unit, fv, height: 230,
+        dots: E.map(e => ({ t: e.ride.start, v: e[key], c: e.hard ? '--power' : '--accent', ride: e.ride, ring: e.pr, label: `${e.hard ? '强度日 · ' : ''}${name} ` })),
+        lines: [{ name: '月中位数', c: '--text-primary', pts: monthly(E.map(e => ({ start: e.ride.start, v: e[key] })), x => x.v, median) }] });
+      const skipped = sg.efforts.length - E.length;
+      const hrKey = key === 'hr' || key === 'hr_norm';
+      $('segFoot' + si).textContent = [note, lowerBetter && key === 'secs' ? '越低越快。' : '',
+        hrKey && skipped ? `${skipped} 次没有可信心率（心率存疑 ${sg.efforts.filter(e => e[key] == null && hrSuspect(e.ride)).length} 次，其余没戴心率带或缺功率），没有画出。` : ''].filter(Boolean).join(' ');
+    };
+    for (const b of $('segMet' + si).querySelectorAll('button')) b.onclick = () => { segMetric[sg.id] = b.dataset.k; draw(); };
+    draw();
+  });
+  for (const tr of document.querySelectorAll('#segList .lbrow')) tr.onclick = () => openRide(tr.dataset.id);
+}
+function drawReview(r) {
+  const rv = r.review, box = $('rReview');
+  box.hidden = !rv;
+  if (!rv) return;
+  const para = t => esc(t).split(/\n+/).join('<br>');
+  box.innerHTML = `<div class="hd"><h2>教练点评</h2><span class="aside">骑行教练 + 健康医生 · ${esc(rv.written || '')}</span></div>
+    <div class="bd reviewgrid">
+      <div><div class="rk">整体</div><div class="rt">${para(rv.overall)}</div></div>
+      <div><div class="rk">爬坡路段</div><div class="rt">${para(rv.climb)}</div></div>
+      <div><div class="rk">无灯路段</div><div class="rt">${para(rv.flat)}</div></div>
+    </div>`;
+}
+function drawRideSegs(r) {
+  const mine = SEGS.flatMap(sg => sg.efforts.filter(e => e.ride === r).map(e => ({ sg, e })));
+  $('rSegCard').hidden = !mine.length;
+  $('rSegs').innerHTML = mine.map(({ sg, e }) => `<div class="rseg"><a href="#segments">${esc(sg.name)}</a>
+    <span><b>${mmss(e.secs)}</b> · ${fmt(e.spd, 1)} km/h${e.pw != null ? ` · ${e.pw} W` : ''}${e.pw1 != null ? `（前半 ${e.pw1} / 后半 ${e.pw2} W）` : ''}${e.hr != null ? ` · ${e.hr} bpm` : ''}</span>
+    <span class="muted">第 ${e.rank} / ${sg.efforts.length}${e.hard ? ' <span class="badge hard">强度日</span>' : ''}${e.pr ? ' <span class="badge accent">当时的个人纪录</span>' : ''}</span>
+    ${sg.targets ? `<div class="rsegt">目标：${sg.targets.map(t => `${esc(t.label)} ${esc(t.power)}`).join('，')}</div>` : ''}</div>`).join('');
+}
+
+/* ============ ROUTER ============ */
+let homeDrawn = false, feedDrawn = false, view = null;
+const scrollMemo = {};
+function route() {
+  hideTip();
+  const m = location.hash.match(/^#ride\/(.+)$/);
+  const r = m && byId[decodeURIComponent(m[1])];
+  const next = r ? 'ride' : location.hash === '#feed' ? 'feed' : location.hash === '#trends' ? 'trends' : location.hash === '#segments' ? 'segs' : 'home';
+  if (view && view !== 'ride') scrollMemo[view] = scrollY;   // come back to where you were in a list
+  view = next;
+  $('viewHome').hidden = next !== 'home'; $('viewFeed').hidden = next !== 'feed'; $('viewRide').hidden = next !== 'ride'; $('viewTrends').hidden = next !== 'trends'; $('viewSegs').hidden = next !== 'segs';
+  $('navTrends').classList.toggle('on', next === 'trends'); $('navSegs').classList.toggle('on', next === 'segs');
+  $('navHome').classList.toggle('on', next === 'home');
+  $('navFeed').classList.toggle('on', next === 'feed' || next === 'ride');
+  if (next === 'ride') { renderRide(r); scrollTo(0, 0); return; }
+  if (next === 'segs') { requestAnimationFrame(() => { drawSegments(); scrollTo(0, scrollMemo.segs || 0); }); return; }
+  if (next === 'trends') { requestAnimationFrame(() => { drawTrends(); scrollTo(0, scrollMemo.trends || 0); }); return; }
+  if (next === 'feed') {
+    if (!feedDrawn) { feedDrawn = true; drawFeed(); }
+    requestAnimationFrame(() => scrollTo(0, scrollMemo.feed || 0));
+    return;
+  }
+  if (!homeDrawn) { homeDrawn = true; drawYear(); drawWeek(); drawBest(); drawRecent(); }
+  requestAnimationFrame(() => {
+    drawMonths(); drawLog();
+    if (!heroMap) drawHero(); else heroMap.invalidateSize();
+    scrollTo(0, scrollMemo.home || 0);
+  });
+}
+function rebuildMaps() {
+  if (heroMap) drawHero();
+  if (homeDrawn) drawRecent();
+  if (feedDrawn) drawFeed();
+  if (current && !$('viewRide').hidden) drawRideMap(current);
+}
+$('footer').textContent = `数据更新于 ${DATA.generated} · 共 ${rides.length} 次骑行`;
+addEventListener('hashchange', route);
+let rt; addEventListener('resize', () => { clearTimeout(rt); rt = setTimeout(() => { if (!$('viewHome').hidden) { drawMonths(); drawLog(); } else if (!$('viewTrends').hidden) drawTrends(); else if (!$('viewSegs').hidden) drawSegments(); else if (current) drawCharts(current); }, 150); });
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => { rebuildMaps(); if (!$('viewHome').hidden) { drawMonths(); drawLog(); } else if (!$('viewTrends').hidden) drawTrends(); else if (!$('viewSegs').hidden) drawSegments(); else if (current) drawCharts(current); });
+loadNames().finally(route);
+</script>
+</body>
+</html>

@@ -1,0 +1,11 @@
+# derived — rebuilt by the scripts
+rides/all/
+rides/dashboard.html
+rides/preview.html
+rides/reviews/pending.json
+rides/reviews/draft.json
+__pycache__/
+*.pyc
+*.tmp
+*.part
+.claude/settings.local.json

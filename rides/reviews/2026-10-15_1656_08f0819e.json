@@ -1,0 +1,100 @@
+{
+ "id": "08f0819e2deffc414088199497146cbb",
+ "when": "2026-10-15 16:56 周四",
+ "title": "下班通勤",
+ "start": 1792054560,
+ "written": "2026-10-19 21:49",
+ "overall": "下班 52 分钟、均速 21.6 km/h，比最近 8 次下班的平均（21.1 km/h）还快一点，功率 102 W 基本持平。需要留意的是心率：平均 154、最高 175，同功率心率 154.3，比最近下班的 146.8 高了约 7 bpm；红灯后心率降了 15.5，也低于最近的 21（不过这次只有 2 次停车可比，参考性有限）。同样的功率心率明显偏高，常见原因是睡眠不足、工作压力、喝水少，或者一天骑两趟的累积疲劳，偶尔一次不用担心。如果接下来两三次还明显偏高，或者早上醒来觉得心跳快、乏力，就主动休息一两天；如果出现胸闷、心慌、头晕，应停止骑行并就医检查。",
+ "climb": "下班方向不经过出门爬坡这段。",
+ "flat": "下班方向不经过丈八东路无灯段。",
+ "data": {
+  "id": "08f0819e2deffc414088199497146cbb",
+  "when": "2026-10-15 16:56 周四",
+  "title": "下班通勤",
+  "direction": "下班",
+  "commute": true,
+  "ride": {
+   "distance_km": 17.93,
+   "moving_time": "52:08",
+   "avg_speed_kmh": 21.6,
+   "max_speed_kmh": 49.2,
+   "avg_power": 102,
+   "max_power": 378,
+   "avg_hr": 154,
+   "max_hr": 175,
+   "cadence": 72,
+   "climb_m": 76,
+   "kcal": 334,
+   "best_1min_power": 176,
+   "best_5min_power": 129,
+   "same_power_hr_at_100w": 154.3,
+   "red_light_hr_recovery": 15.5,
+   "red_light_stops_measured": 2
+  },
+  "hr_quality": {
+   "status": "ok"
+  },
+  "baseline_last_8_same_direction": {
+   "n": 8,
+   "speed": 21.1,
+   "power": 104.5,
+   "same_power_hr": 146.8,
+   "red_light_hr_recovery": 21.2
+  },
+  "segments": [
+   {
+    "id": "home-climb",
+    "name": "出门爬坡（南三环路口之后）",
+    "note": "上班方向，出门后约 1.2 km 缓坡，平均 2.4%，几乎不停车",
+    "targets": [
+     {
+      "label": "前半段",
+      "power": "90–100 W",
+      "text": "踏频 85–90，轻档先热身"
+     },
+     {
+      "label": "后半段",
+      "power": "110–120 W",
+      "text": "踏频 80–85，腿热了再加力"
+     }
+    ],
+    "hr_note": "心率只看上限：坡顶约 150，超过 155 就收一点",
+    "hard_min_power": null,
+    "passed": false,
+    "total_passes": 31
+   },
+   {
+    "id": "zhangba-east",
+    "name": "丈八东路（无红绿灯段）",
+    "note": "上班方向，自东向西，约 940 m，平路",
+    "targets": [
+     {
+      "label": "平时",
+      "power": "120–130 W",
+      "text": "踏频 80–90，平稳输出"
+     },
+     {
+      "label": "强度日（每周一次）",
+      "power": "170–190 W",
+      "text": "踏频 80–90，坐着骑，从头稳到尾"
+     }
+    ],
+    "hr_note": "心率只看上限：强度日结尾 165–170 正常，超过 175 就收一点",
+    "hard_min_power": 160,
+    "passed": false,
+    "total_passes": 32,
+    "last_hard_day": null
+   }
+  ],
+  "training": {
+   "load_now": 103,
+   "load_peak": 146,
+   "load_peak_date": "2026-06-11",
+   "load_pct_of_peak": 71,
+   "days_since_previous_ride": 0.3,
+   "riding_days_last_7": 3,
+   "riding_days_last_14": 3
+  },
+  "previous_reviews": []
+ }
+}

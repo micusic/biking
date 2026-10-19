@@ -1,0 +1,140 @@
+{
+ "id": "7a219fc68121c3653f106282326b9fe6",
+ "when": "2026-10-15 08:43 周四",
+ "title": "上班通勤",
+ "start": 1792024980,
+ "written": "2026-10-19 21:49",
+ "overall": "一趟很扎实的上班：均速 22.6 km/h、平均功率 97 W，和最近 8 次上班的平均水平（22.6 km/h、94 W）持平；同功率心率 149.8，比最近的 152.9 低约 3 bpm，红灯后约 1 分钟心率降了 15.5（最近一般 12），心肺这天状态不错。训练量目前是最高时的 66%，近一周骑了 3 天，节奏正常，关键是这个频率要保持住，别再出现夏天那样两周以上的空档。健康方面：最高心率 166、心率曲线平稳，没有需要担心的信号。",
+ "climb": "4:40，31 次里第 4 快，但骑法和新目标正好相反：前半段 141 W、后半段 123 W，前快后慢，踏频只有 69（目标前半 85–90、后半 80–85），坡顶心率 156，略过了 155 的上限。这是定新目标之前的骑法，可以当作起点。下次出门先降一两个档，前半段把功率压到 100 W 以内、踏频转到 85 以上，后半段腿热了再加到 110–120 W，用时大概只多十几秒，膝盖和心脏的冷启动压力会小很多。",
+ "flat": "2:08、133 W，略高于平时 120–130 W 的目标，第 8/32，用时比最近 5 次的中位数（2:11）快 3 秒；结束心率 159，在上限以内。唯一要改的是踏频，69 偏低（目标 80–90），同样的功率换轻一档、转快一点，腿部疲劳会更少。到现在还没有过强度日，这周可以安排第一次：坐着骑，170–190 W、踏频 80–90，从头稳到尾，起步别冲过 200 W。",
+ "data": {
+  "id": "7a219fc68121c3653f106282326b9fe6",
+  "when": "2026-10-15 08:43 周四",
+  "title": "上班通勤",
+  "direction": "上班",
+  "commute": true,
+  "ride": {
+   "distance_km": 17.23,
+   "moving_time": "46:35",
+   "avg_speed_kmh": 22.6,
+   "max_speed_kmh": 40.9,
+   "avg_power": 97,
+   "max_power": 424,
+   "avg_hr": 147,
+   "max_hr": 166,
+   "cadence": 68,
+   "climb_m": 53,
+   "kcal": 293,
+   "best_1min_power": 176,
+   "best_5min_power": 136,
+   "same_power_hr_at_100w": 149.8,
+   "red_light_hr_recovery": 15.5,
+   "red_light_stops_measured": 2
+  },
+  "hr_quality": {
+   "status": "ok"
+  },
+  "baseline_last_8_same_direction": {
+   "n": 8,
+   "speed": 22.6,
+   "power": 94.0,
+   "same_power_hr": 152.9,
+   "red_light_hr_recovery": 12.0
+  },
+  "segments": [
+   {
+    "id": "home-climb",
+    "name": "出门爬坡（南三环路口之后）",
+    "note": "上班方向，出门后约 1.2 km 缓坡，平均 2.4%，几乎不停车",
+    "targets": [
+     {
+      "label": "前半段",
+      "power": "90–100 W",
+      "text": "踏频 85–90，轻档先热身"
+     },
+     {
+      "label": "后半段",
+      "power": "110–120 W",
+      "text": "踏频 80–85，腿热了再加力"
+     }
+    ],
+    "hr_note": "心率只看上限：坡顶约 150，超过 155 就收一点",
+    "hard_min_power": null,
+    "passed": true,
+    "total_passes": 31,
+    "time": "4:40",
+    "seconds": 280,
+    "rank": 4,
+    "personal_record": false,
+    "speed_kmh": 15.5,
+    "power": 132,
+    "first_half_power": 141,
+    "second_half_power": 123,
+    "cadence": 69,
+    "hr_avg": 153,
+    "hr_end": 156,
+    "same_power_end_hr": 148.7,
+    "hard_day": false,
+    "recent_5_median": {
+     "time": "4:52",
+     "power": 124,
+     "cadence": 73,
+     "hr_end": 158
+    },
+    "best_time": "4:17"
+   },
+   {
+    "id": "zhangba-east",
+    "name": "丈八东路（无红绿灯段）",
+    "note": "上班方向，自东向西，约 940 m，平路",
+    "targets": [
+     {
+      "label": "平时",
+      "power": "120–130 W",
+      "text": "踏频 80–90，平稳输出"
+     },
+     {
+      "label": "强度日（每周一次）",
+      "power": "170–190 W",
+      "text": "踏频 80–90，坐着骑，从头稳到尾"
+     }
+    ],
+    "hr_note": "心率只看上限：强度日结尾 165–170 正常，超过 175 就收一点",
+    "hard_min_power": 160,
+    "passed": true,
+    "total_passes": 32,
+    "last_hard_day": null,
+    "time": "2:08",
+    "seconds": 128,
+    "rank": 8,
+    "personal_record": false,
+    "speed_kmh": 26.7,
+    "power": 133,
+    "first_half_power": null,
+    "second_half_power": null,
+    "cadence": 69,
+    "hr_avg": 159,
+    "hr_end": 159,
+    "same_power_end_hr": 152.8,
+    "hard_day": false,
+    "recent_5_median": {
+     "time": "2:11",
+     "power": 121,
+     "cadence": 78,
+     "hr_end": 162
+    },
+    "best_time": "1:59"
+   }
+  ],
+  "training": {
+   "load_now": 96,
+   "load_peak": 146,
+   "load_peak_date": "2026-06-11",
+   "load_pct_of_peak": 66,
+   "days_since_previous_ride": 1.7,
+   "riding_days_last_7": 3,
+   "riding_days_last_14": 3
+  },
+  "previous_reviews": []
+ }
+}
