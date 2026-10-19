@@ -14,6 +14,7 @@ from xds_bin2fit import TZ, parse_points
 from xds_hrq import clean as clean_hr, load_config as load_hrq_config
 from xds_places import assign_names
 from xds_segments import efforts as segment_efforts, load as load_segments
+from xds_weather import ensure as weather_ensure, for_ride as weather_for_ride
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 TEMPLATE = os.path.join(HERE, "dashboard_template.html")
@@ -143,6 +144,9 @@ def collect(rides, fixes, raw_dir):
         with open(binf, "rb") as f:
             data.append(ride_data(r, parse_points(f.read()), fixes.get(r["id"], 0), hrq, segdefs))
     assign_names(data)
+    cache = weather_ensure({datetime.datetime.fromtimestamp(r["start"], TZ).date() for r in data})
+    for r in data:
+        r["wx"] = weather_for_ride(cache, r["start"], r["end"])
     return data, segdefs
 
 

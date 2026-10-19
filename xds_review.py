@@ -26,6 +26,7 @@ sys.path.insert(0, HERE)
 from xds_bin2fit import TZ  # noqa: E402
 from xds_dashboard import REVIEWS, build, collect  # noqa: E402
 from xds_sync import INDEX, RAW, apply_corrections  # noqa: E402
+from xds_weather import TEMP_HR_PER_10C  # noqa: E402
 
 STATE = os.path.join(REVIEWS, "state.json")
 JOURNAL = os.path.join(REVIEWS, "journal.md")
@@ -34,6 +35,8 @@ WD = "一二三四五六日"
 PROFILE = dict(
     age=datetime.date.today().year - 1987, weight_kg=73, height_cm=178, hr_max_est=181, hr_max_seen=176,
     goals=["心肺功能提高", "肌肉力量提高"],
+    temperature_note=("原始骑行数据没有温度，weather 来自公开天气数据。气温低时同功率心率会自然偏低，"
+                      "评价心肺时先扣掉 weather.expected_same_power_hr_shift_from_temperature 再和基线比。"),
     context=("主要是上下班通勤：上班约 56 分钟（9:30 前到）、下班约 60 分钟（18:00 前到），时间固定，不能刻意放慢；"
              "下班爬升约是上班的两倍；路况复杂，不在通勤中做全力冲刺测试。能控制的只有两段：出门爬坡和丈八东路无灯段，"
              "两段都按功率骑、心率只看上限。体能跟训练量走：7–8 月天热停骑，各项指标明显下降，9 月恢复。"),
@@ -100,6 +103,19 @@ def training(data, upto):
                 riding_days_last_7=days(7), riding_days_last_14=days(14))
 
 
+def weather_block(wx, base_temp):
+    """Ride weather plus how much of a heart-rate difference the temperature alone would explain."""
+    if not wx:
+        return None
+    out = dict(wx, source="Open-Meteo 西安市区逐小时（骑行时段平均）")
+    if base_temp is not None:
+        out["baseline_temperature"] = base_temp
+        out["expected_same_power_hr_shift_from_temperature"] = round(TEMP_HR_PER_10C * (wx["temp"] - base_temp) / 10, 1)
+    out["rule"] = (f"同样功率和训练量下，气温每高 10°C 心率约高 {TEMP_HR_PER_10C} bpm（±1.3）；"
+                   "气温对红灯心率恢复、路段用时、骑行功率没有可测出的影响")
+    return out
+
+
 def packet_for(r, data, segdefs, reviews):
     am = datetime.datetime.fromtimestamp(r["start"], TZ).hour < 12
     f = r.get("fit") or {}
@@ -110,7 +126,8 @@ def packet_for(r, data, segdefs, reviews):
                 speed=med([x["fit"]["mspd"] for x in same if x.get("fit") and x["fit"].get("mspd")]),
                 power=med([x["fit"]["mpw"] for x in same if x.get("fit") and x["fit"].get("mpw") is not None]),
                 same_power_hr=med([v for v in (norm_hr(x) for x in same) if v is not None]),
-                red_light_hr_recovery=med([x["fit"]["hrr"] for x in same if x.get("fit") and x["fit"].get("hrr") is not None]))
+                red_light_hr_recovery=med([x["fit"]["hrr"] for x in same if x.get("fit") and x["fit"].get("hrr") is not None]),
+                temperature=med([x["wx"]["temp"] for x in same if x.get("wx")]))
     segs = []
     for sd in segdefs:
         passes = sorted([dict(e, start=x["start"]) for x in data for e in x.get("segs", []) if e["sid"] == sd["id"]],
@@ -153,6 +170,7 @@ def packet_for(r, data, segdefs, reviews):
                   same_power_hr_at_100w=norm_hr(r), red_light_hr_recovery=f.get("hrr"),
                   red_light_stops_measured=f.get("hrr_n")),
         hr_quality=(r.get("hrq") or {"status": "ok"}),
+        weather=weather_block(r.get("wx"), base["temperature"]),
         baseline_last_8_same_direction=base,
         segments=segs,
         training=training(data, r["start"]),
@@ -198,6 +216,9 @@ def journal_entry(p, rv):
             lines.append(f"- {s['name']}：{s['time']} · {s['power']} W{split} · 踏频 {s['cadence']} · "
                          f"结束心率 {s['hr_end'] or '–'} · 第 {s['rank']}/{s['total_passes']}"
                          f"{' · 强度日' if s.get('hard_day') else ''}{' · 个人纪录' if s.get('personal_record') else ''}")
+    w = p.get("weather")
+    if w:
+        lines.append(f"- 天气：{w['temp']}°C（体感 {w['feels']}°C）· 湿度 {w['rh']}% · 风 {w['wind']} km/h")
     t = p["training"]
     if t:
         lines.append(f"- 训练量：{t['load_now']}（最高的 {t['load_pct_of_peak']}%），近 7 天骑 {t['riding_days_last_7']} 天")

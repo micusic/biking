@@ -124,6 +124,7 @@ button { font: inherit; color: inherit; }
 select { font: inherit; font-size: 13px; color: var(--text-primary); background: var(--surface-1); border: 1px solid var(--border); border-radius: 8px; padding: 4px 8px; }
 
 .feed { display: grid; gap: 12px; }
+.wx { margin-left: 10px; color: var(--text-primary); white-space: nowrap; }
 .reviewcard { margin-bottom: 16px; border-left: 4px solid var(--accent); }
 .reviewgrid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
 .reviewgrid .rk { font-size: 12px; font-weight: 700; color: var(--accent-ink); margin-bottom: 4px; }
@@ -452,6 +453,7 @@ async function saveName(r, name) {
   if (feedDrawn) drawFeed();
 }
 const title = r => `${md(r.start)} ${rideName(r)}`;
+const wxIcon = t => t < 10 ? '🥶' : t < 18 ? '🌤' : t < 28 ? '☀️' : '🥵';
 const hrSuspect = r => r.hrq && (r.hrq.status === 'suspect' || r.hrq.status === 'bad');
 const hrWhy = r => r.hrq ? `心率带信号异常（${r.hrq.why.join('、')}），已去掉 ${r.hrq.pct}% 的心率数据` : '';
 const hrBadge = r => hrSuspect(r) ? ` <span class="badge warn" title="${esc(hrWhy(r))}">心率存疑</span>` : '';
@@ -684,7 +686,7 @@ const stat = (k, v, u) => `<div><div class="k">${k}</div><div class="v">${v}${u 
 const actCard = r => `
     <div class="card act" data-id="${r.id}">
       <div class="info">
-        <div class="t"><div class="ico">${ICON}</div><div><div class="t1">${title(r)}${r.fixed ? ' <span class="badge">日期已修正</span>' : ''}${hrBadge(r)}${r.review ? ' <span class="badge accent">有点评</span>' : ''}</div><div class="t2">${dt(r.start).getFullYear()}年 · 周${WD[dt(r.start).getDay()]} · ${hm(r.start)}–${hm(r.end)}</div></div></div>
+        <div class="t"><div class="ico">${ICON}</div><div><div class="t1">${title(r)}${r.fixed ? ' <span class="badge">日期已修正</span>' : ''}${hrBadge(r)}${r.review ? ' <span class="badge accent">有点评</span>' : ''}</div><div class="t2">${dt(r.start).getFullYear()}年 · 周${WD[dt(r.start).getDay()]} · ${hm(r.start)}–${hm(r.end)}${r.wx ? ` · ${wxIcon(r.wx.temp)} ${Math.round(r.wx.temp)}°C` : ''}</div></div></div>
         <div class="stats">${stat('距离', fmt(r.dist, 2), 'km')}${stat('用时', dur(r.secs))}${stat('均速', fmt(r.avg, 1), 'km/h')}${stat('爬升', fmt(r.gain), 'm')}${r.hr ? stat(hrSuspect(r) ? '心率（存疑）' : '心率', r.hr, 'bpm') : ''}</div>
       </div>
       <div class="mini" data-id="${r.id}"></div>
@@ -735,7 +737,7 @@ function renderRide(r) {
   current = r;
   $('rIco').innerHTML = ICON.replace('width="20" height="20"', 'width="24" height="24"');
   showTitle(r);
-  $('rMeta').textContent = metaLine(r);
+  $('rMeta').innerHTML = esc(metaLine(r)) + (r.wx ? ` <span class="wx" title="西安市区逐小时天气（Open-Meteo），骑行时段平均">${wxIcon(r.wx.temp)} ${fmt(r.wx.temp, 1)}°C<span class="muted">（体感 ${fmt(r.wx.feels, 0)}°C · 湿度 ${r.wx.rh}% · 风 ${r.wx.wind} km/h）</span></span>` : '');
   $('rideIdx').textContent = `第 ${r.idx + 1} / ${rides.length} 次`;
   const big = (v, u, k) => `<div><div class="v">${v}<small>${u}</small></div><div class="k">${k}</div></div>`;
   $('rPrimary').innerHTML = big(fmt(r.dist, 2), 'km', '距离') + big(dur(r.secs), '', '运动时间') + big(fmt(r.gain), 'm', '爬升');

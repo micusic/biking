@@ -19,7 +19,7 @@ claude.ai 上的 Routine「骑行点评（每天 20:30）」（https://claude.ai
 `rides/reviews/runs.log` 记一行「无新增」。
 
 - 云端环境 **Personal**：环境变量 `XDS_UID`、`XDS_TOKEN`（喜德盛登录凭证）；网络白名单含 `prdapi.xdsiot.com`、
-  `nominatim.openstreetmap.org`。不能连接任何 claude.ai 连接器。
+  `nominatim.openstreetmap.org`、`archive-api.open-meteo.com`、`api.open-meteo.com`。不能连接任何 claude.ai 连接器。
 - 点评存在 `rides/reviews/<日期>_<id>.json`，汇总在 `rides/reviews/journal.md`；展示页的骑行详情里有「教练点评」卡片。
 - 本机双击 `骑行记录.cmd` 会先 `git pull` 拿到云端的新数据和点评，再生成页面。
 - **凭证失效时**（runs.log 里出现「登录凭证失效」）：手机打开一次 App → 备份 iPhone → 本机运行 `uv run xds_token.py`
@@ -37,6 +37,7 @@ claude.ai 上的 Routine「骑行点评（每天 20:30）」（https://claude.ai
 | `rides/names.json` | 骑行名称：自动地名 + 手动改名；以「上班通勤 / 下班通勤」开头的算作通勤 |
 | `rides/hr_quality.json` | **心率带数据质量**，见下 |
 | `rides/segments.json` | 路段定义，见下 |
+| `rides/weather.json` | 每小时天气缓存（Open-Meteo，西安市区；原始骑行数据里没有温度） |
 | `rides/dashboard.html` | 展示页（每次同步自动重新生成） |
 
 ## 体能趋势（展示页「趋势」）
@@ -57,6 +58,17 @@ claude.ai 上的 Routine「骑行点评（每天 20:30）」（https://claude.ai
 **分析结论（2026-10）**：体能跟着训练量走，不是一直往上涨。7–8 月天热不骑通勤，训练量从 6 月的约 136 掉到约 57，
 同功率心率、红灯恢复、路段用时都明显变差；9 月恢复后 3–4 周基本回来。保持每周骑行、避免停骑两周以上是最重要的。
 心率存疑的骑行（`rides/hr_quality.json`）不参与任何心率指标。
+
+## 气温
+
+原始骑行数据里**没有温度**。`xds_weather.py` 按骑行时段从 Open-Meteo 取西安市区（只发市中心坐标，不发轨迹）的逐小时
+气温、体感、湿度、风，缓存在 `rides/weather.json`，展示页的骑行详情和活动列表都会显示。
+
+**气温的影响（61 次通勤回归，扣除功率、训练量和上下班方向）**：气温每高 10°C，同功率心率约高 **3.4 bpm（±1.3）**；
+对红灯心率恢复、路段用时、骑行功率**没有**可测出的影响。所以天冷时心率偏低是正常的，评价心肺前要先扣掉这部分
+（点评数据包里的 `weather.expected_same_power_hr_shift_from_temperature`）。另外早上同功率心率比下午高约 6.6 bpm。
+
+云端需要的网络白名单：`archive-api.open-meteo.com`、`api.open-meteo.com`（拿不到天气时不影响同步，只是没有气温）。
 
 ## ⚠ 心率数据质量 —— 做任何心率分析前先看这里
 
