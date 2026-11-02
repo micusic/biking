@@ -175,6 +175,20 @@ select { font: inherit; font-size: 13px; color: var(--text-primary); background:
 .segtargets .hrtg { color: var(--text-secondary); }
 .badge.hard { background: rgba(98,80,214,0.14); color: var(--power); }
 .ok { color: var(--good); font-weight: 700; }
+.fatigue { margin-top: 16px; }
+.fatigue .fhd { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 12px; padding: 14px 16px 6px; }
+.fatigue .fhd h2 { font-size: 15px; margin: 0; }
+.fatigue .lvl { font-weight: 700; border-radius: 6px; padding: 1px 9px; font-size: 13px; }
+.fatigue .lvl.l0 { background: rgba(12,163,12,0.14); color: var(--good); }
+.fatigue .lvl.l1 { background: rgba(250,178,25,0.2); color: #8a5a00; }
+.fatigue .lvl.l2 { background: rgba(230,60,60,0.14); color: var(--hr); }
+:root[data-theme="dark"] .fatigue .lvl.l1 { color: #fab219; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .fatigue .lvl.l1 { color: #fab219; } }
+.fatigue .sig { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; padding: 6px 16px 14px; }
+.fatigue .sig > div { background: var(--surface-2); border-radius: 8px; padding: 8px 10px; font-size: 12px; color: var(--text-secondary); }
+.fatigue .sig b { display: block; font-size: 13px; color: var(--text-primary); margin-bottom: 2px; }
+.fatigue .sig .on b { color: var(--hr); }
+@media (max-width: 720px) { .fatigue .sig { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 .rsegt { width: 100%; font-size: 12px; color: var(--text-muted); }
 .tlegend { display: flex; flex-wrap: wrap; gap: 14px; font-size: 12px; color: var(--text-secondary); margin-bottom: 4px; }
 .tlegend i { display: inline-block; vertical-align: middle; margin-right: 5px; }
@@ -346,6 +360,7 @@ table.splits { width: 100%; border-collapse: collapse; font-size: 13px; }
 <div class="page" id="viewTrends" hidden>
   <div class="feedhead"><h1>体能趋势</h1><span class="muted" id="trendNote"></span></div>
   <div class="trend-tiles" id="trendTiles"></div>
+  <div class="card fatigue" id="fatigueCard" hidden></div>
   <h3 class="tsec">心肺<small>同样的强度下，心率越低、停车后降得越快越好</small></h3>
   <div class="trend-grid g3">
     <div class="card"><div class="hd"><h2>同功率心率</h2><span class="aside">bpm · 换算到 100 W · 越低越好</span></div><div class="bd"><div class="tlegend" id="lgNhr"></div><div id="tNhr"></div><div class="muted tfoot">每趟通勤去掉前 10 分钟，按功率差把平均心率换算到 100 W。上下班地形不同，分开看。</div></div></div>
@@ -1036,6 +1051,7 @@ function drawTrends() {
     tile('红灯心率恢复', first(hrrR, r => r.fit.hrr), recent(hrrR, r => r.fit.hrr), 'bpm', 1, false, '近 30 天 vs 最初 6 次') +
     tile('丈八东路强度日', null, hardBest ? hardBest.pw : null, 'W', 0, false, hardBest ? `最好一次 ${md(hardBest.ride.start)} · ${mmss(hardBest.secs)}` : '还没有强度日，目标 170–190 W') +
     tile('训练量', peak ? peak.v : null, ctlPts.length ? ctlPts[ctlPts.length - 1].v : null, '', 0, false, peak ? `最高时的 ${Math.round(ctlPts[ctlPts.length - 1].v / peak.v * 100)}%` : '');
+  drawFatigue();
   $('trendNote').textContent = `${com.length} 次通勤 · 心率存疑的骑行不参与心率指标`;
 }
 function weekBars(box, weeks) {
@@ -1091,6 +1107,17 @@ const targetsHtml = sg => (sg.targets && sg.targets.length) ? `<div class="segta
     <span class="tt">目标</span>${sg.targets.map(t => `<span class="tg"><b>${esc(t.power)}</b> ${esc(t.label)}${t.text ? `<span class="muted"> · ${esc(t.text)}</span>` : ''}</span>`).join('')}
     ${sg.hr ? `<span class="tg hrtg">♥ ${esc(sg.hr)}</span>` : ''}</div>` : '';
 let segMaps = [];
+function drawFatigue() {
+  // fatigue signals computed by xds_fatigue.py at build time
+  const fa = DATA.fatigue, box = $('fatigueCard');
+  box.hidden = !fa;
+  if (!fa) return;
+  const lv = { '正常': 0, '留意': 1, '建议休息': 2 }[fa.level] ?? 1;
+  box.innerHTML = `<div class="fhd"><h2>疲劳信号</h2><span class="lvl l${lv}">${esc(fa.level)}</span>
+      <span class="muted">${esc(fa.advice)}</span></div>
+    <div class="sig">${fa.signals.map(s => `<div class="${s.flag ? 'on' : ''}"><b>${s.flag ? '⚠ ' : '✓ '}${esc(s.name)}</b>${esc(s.detail)}</div>`).join('')}</div>
+    <div class="muted tfoot" style="padding:0 16px 14px">每项都和你自己的历史比：同功率心率（已扣气温）连续偏高 5 bpm、红灯恢复少 5 bpm、一周做功突然创半年新高、连续骑 4 天以上。1 项 = 留意，2 项以上 = 建议休息。截至 ${esc(fa.as_of)}。</div>`;
+}
 function drawSegments() {
   for (const m of segMaps) m.remove(); segMaps = [];
   const box = $('segList');

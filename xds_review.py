@@ -7,7 +7,7 @@
   uv run xds_review.py pending [--no-sync]
       Sync from the cloud (unless --no-sync), then print a JSON packet of every ride that has no review yet:
       the ride's numbers, how it compares with recent rides in the same direction, both segments against their
-      targets, heart-rate data quality and training load. Also written to rides/reviews/pending.json.
+      targets, heart-rate data quality and training load and fatigue signals (xds_fatigue.py). Also written to rides/reviews/pending.json.
   uv run xds_review.py save <file.json>
       Store reviews ({"reviews": [{"id", "overall", "climb", "flat"}]}) as rides/reviews/<date>_<id>.json,
       append ride data + review to rides/reviews/journal.md, and rebuild the dashboard (shown on the ride page).
@@ -25,6 +25,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
 from xds_bin2fit import TZ  # noqa: E402
 from xds_dashboard import REVIEWS, build, collect  # noqa: E402
+from xds_fatigue import assess as fatigue  # noqa: E402
 from xds_sync import INDEX, RAW, apply_corrections  # noqa: E402
 from xds_weather import TEMP_HR_PER_10C  # noqa: E402
 
@@ -41,6 +42,9 @@ PROFILE = dict(
              "下班爬升约是上班的两倍；路况复杂，不在通勤中做全力冲刺测试。能控制的只有两段：出门爬坡和丈八东路无灯段，"
              "两段都按功率骑、心率只看上限。体能跟训练量走：7–8 月天热停骑，各项指标明显下降，9 月恢复。"),
     hr_rule="hr_quality.status 为 suspect/bad 的骑行，心率数据不可信，不要据此评价心肺或给出心率相关结论。",
+    fatigue_rule=("fatigue 是截至这次骑行的疲劳信号（同功率心率、红灯恢复、加量速度、连续骑行，各自和本人历史比）。"
+                  "「整体」里要说一句疲劳状态：正常就简短带过；留意/建议休息时说明是哪个信号、建议怎么调整"
+                  "（睡眠、吃饭、暂停强度日或休息 1–2 天）。不要单凭一次心率偏高就判断过度训练。"),
 )
 
 
@@ -174,6 +178,7 @@ def packet_for(r, data, segdefs, reviews):
         baseline_last_8_same_direction=base,
         segments=segs,
         training=training(data, r["start"]),
+        fatigue=fatigue(data, r["end"]),
         previous_reviews=[dict(when=v["when"], overall=v["overall"][:160]) for v in prev_reviews],
     )
 
@@ -222,6 +227,10 @@ def journal_entry(p, rv):
     t = p["training"]
     if t:
         lines.append(f"- 训练量：{t['load_now']}（最高的 {t['load_pct_of_peak']}%），近 7 天骑 {t['riding_days_last_7']} 天")
+    fa = p.get("fatigue")
+    if fa:
+        why = "；".join(s["detail"] for s in fa["signals"] if s["flag"])
+        lines.append(f"- 疲劳信号：{fa['level']}" + (f"（{why}）" if why else ""))
     lines += ["", f"**整体**：{rv['overall']}", "", f"**爬坡路段**：{rv['climb']}", "", f"**无灯路段**：{rv['flat']}", "", ""]
     return "\n".join(lines)
 
