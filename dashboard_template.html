@@ -1166,6 +1166,15 @@ function drawSegments() {
     if (ll.length > 1) {
       L.polyline(ll, { color: css('--surface-1'), weight: 9 }).addTo(mp);
       const pl = L.polyline(ll, { color: css('--accent'), weight: 5 }).addTo(mp);
+      if (sg.split) {  // first part drawn lighter, with the point where the second part starts
+        const cut = best.km[0] + (best.km[1] - best.km[0]) * sg.split;
+        const k = P.findIndex(p => p[0] >= cut);
+        if (k > 0) {
+          L.polyline(ll.slice(0, k + 1), { color: css('--aqua'), weight: 5 }).addTo(mp);
+          L.circleMarker(ll[k], { radius: 7, color: css('--surface-1'), weight: 3, fillColor: css('--power'), fillOpacity: 1 })
+            .bindTooltip(`半程 ${Math.round((cut - best.km[0]) * 1000)} m · 从这里开始加力`, { permanent: true, direction: 'top', offset: [0, -6] }).addTo(mp);
+        }
+      }
       L.circleMarker(ll[0], { radius: 6, color: css('--surface-1'), weight: 2, fillColor: '#0ca30c', fillOpacity: 1 }).bindTooltip('起点').addTo(mp);
       L.circleMarker(ll[ll.length - 1], { radius: 6, color: css('--surface-1'), weight: 2, fillColor: '#d03b3b', fillOpacity: 1 }).bindTooltip('终点').addTo(mp);
       setTimeout(() => { mp.invalidateSize(); mp.fitBounds(pl.getBounds(), { padding: [20, 20] }); }, 0);
