@@ -75,7 +75,8 @@ def assess(data, upto=None):
         return sum((r.get("fit") or {}).get("kj") or 0 for r in rides if a < r["start"] <= b)
     week = kj(upto - 7 * DAY, upto)
     prev4 = kj(upto - 35 * DAY, upto - 7 * DAY) / 4
-    prev_max = max(kj(upto - (i + 1) * 7 * DAY, upto - i * 7 * DAY) for i in range(1, 27))
+    # every 7-day window (sliding by a day) in the half year before this week: fixed weekly steps miss peaks
+    prev_max = max(kj(upto - (i + 7) * DAY, upto - i * DAY) for i in range(7, 26 * 7 + 1))
     jump = week >= 1.5 * prev4 and week > prev_max and week >= 1200  # below ~3 commute days the risk is small
     signals.append(dict(key="ramp", name="加量速度", flag=jump, week_kj=round(week), prev_4wk_avg_kj=round(prev4),
                         prev_26wk_max_kj=round(prev_max),
