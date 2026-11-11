@@ -11,10 +11,10 @@
 
 登录凭证每次从最新的 iPhone 备份里读，只放在内存里，不落盘。提示「凭证失效」时，打开一次 App 再重新备份。
 
-## 云端点评 Routine（每天 20:30）
+## 云端点评 Routine（周一、四、五 20:30）
 
-claude.ai 上的 Routine「骑行点评（每天 20:30）」（https://claude.ai/code/routines/trig_01BikyfnZ59PpXYK8A6ivfx6）
-每天北京时间 20:30 在云端运行：克隆本仓库 → `python xds_review.py pending` 拉取新骑行 → 以骑行教练 + 健康医生的角度
+claude.ai 上的 Routine「骑行点评（周一、四、五 20:30）」（https://claude.ai/code/routines/trig_01BikyfnZ59PpXYK8A6ivfx6）
+骑车日（周一、四、五）北京时间 20:30 在云端运行（其他日子骑的会在下一次一起点评）：克隆本仓库 → `python xds_review.py pending` 拉取新骑行 → 以骑行教练 + 健康医生的角度
 点评「整体 / 爬坡路段 / 无灯路段」→ `python xds_review.py save` 写入点评 → 提交推送回 main。没有新骑行时只在
 `rides/reviews/runs.log` 记一行「无新增」。
 
@@ -75,7 +75,7 @@ claude.ai 上的 Routine「骑行点评（每天 20:30）」（https://claude.ai
 
 ## 体重（展示页「趋势 → 身体」、每次点评）
 
-数据来自有品体脂秤，在 `picooc/`。**照常上秤、让手机 App 同步到有品云端就行**：云端点评每天先运行
+数据来自有品体脂秤，在 `picooc/`。**照常上秤、让手机 App 同步到有品云端就行**：云端点评每次先运行
 `node cloud.mjs` → `node report.mjs` 拉最新数据、生成 `picooc/body_data.csv`，和点评一起推送回来（`xds_body.update()`）。
 
 - 云端用的是 Personal 环境的环境变量 `PICOOC_SESSION`：只含下载需要的服务器、设备 id、用户 id、成员 id（不含手机号和第三方 token）。
