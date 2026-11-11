@@ -8,13 +8,36 @@ weight is the reliable number. Bluetooth rows carry weight (and impedance) only.
 import csv
 import datetime
 import os
+import shutil
 import statistics as st
+import subprocess
 
 from xds_bin2fit import TZ
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-CSV = os.path.join(HERE, "picooc", "body_data.csv")
+PICOOC = os.path.join(HERE, "picooc")
+CSV = os.path.join(PICOOC, "body_data.csv")
 DAY = 86400
+
+
+def update(log=print):
+    """Pull the latest weighings from the PICOOC cloud and rebuild body_data.csv (node cloud.mjs → report.mjs).
+    Needs a session: PICOOC_SESSION in the cloud routine, picooc/session.json locally. Never logs in or
+    asks for anything; on any failure the existing body_data.csv is kept."""
+    if not shutil.which("node"):
+        return log("  体重：没有 node，跳过")
+    if not os.environ.get("PICOOC_SESSION") and not os.path.exists(os.path.join(PICOOC, "session.json")):
+        return log("  体重：没有有品登录会话（PICOOC_SESSION），跳过")
+    env = dict(os.environ, TZ="Asia/Shanghai")  # the scripts write Beijing times with the machine's zone
+    for script in ("cloud.mjs", "report.mjs"):
+        try:
+            r = subprocess.run(["node", script], cwd=PICOOC, env=env, stdin=subprocess.DEVNULL,
+                               capture_output=True, text=True, encoding="utf-8", timeout=180)
+        except subprocess.TimeoutExpired:
+            return log(f"  体重：{script} 超时，沿用已有数据")
+        if r.returncode:
+            return log(f"  体重：{script} 失败，沿用已有数据：{(r.stderr or r.stdout).strip().splitlines()[-1:]}")
+    log("  体重：" + (r.stdout.strip().splitlines() or [""])[-1])
 
 
 def _f(x):

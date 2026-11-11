@@ -4,9 +4,10 @@
 import { readFileSync, writeFileSync, existsSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { loadSession } from './session.mjs';
 
 const here = dirname(fileURLToPath(import.meta.url));
-const session = JSON.parse(readFileSync(join(here, 'session.json'), 'utf8'));
+const session = loadSession() ?? { roles: {}, login_resp: {} };
 const heightCm = 178; // from your profile; used for BMI on Bluetooth-only rows
 
 const rows = [];
@@ -54,7 +55,7 @@ writeFileSync(join(here, 'data.json'), JSON.stringify(rows, null, 1));
 
 // Flat merged CSV for other tools (Excel, a cycling analysis, ...). Times are Beijing time.
 const cell = v => v == null ? '' : /[",\n]/.test(String(v)) ? `"${String(v).replace(/"/g, '""')}"` : String(v);
-const tod = t => { const h = new Date(t * 1000).getHours(); return h >= 5 && h < 11 ? 'morning' : h >= 16 ? 'evening' : 'other'; };
+const tod = t => { const h = new Date((t + 8 * 3600) * 1000).getUTCHours(); /* Beijing time */ return h >= 5 && h < 11 ? 'morning' : h >= 16 ? 'evening' : 'other'; };
 const cols = ['time', 'unix_time', 'time_of_day', 'weight_kg', 'bmi', 'fat_pct', 'fat_kg', 'lean_kg', 'subcutaneous_fat_pct',
   'visceral_fat', 'muscle_pct', 'water_pct', 'bone_kg', 'bmr_kcal', 'body_age', 'impedance_ohm', 'source', 'abnormal', 'excluded_reason'];
 const lines = [cols.join(',')];

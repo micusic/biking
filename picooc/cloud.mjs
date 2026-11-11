@@ -12,6 +12,7 @@ import { createInterface } from 'node:readline';
 import { readFileSync, writeFileSync, existsSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { fromEnv } from './session.mjs';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const intl = process.argv.includes('--intl');
@@ -147,8 +148,11 @@ const COLS = [
 const csvCell = v => (v === undefined || v === null) ? '' : /[",\n]/.test(String(v)) ? `"${String(v).replace(/"/g, '""')}"` : String(v);
 
 const loginOnly = process.argv.includes('--login-only');
-let s = existsSync(SESSION) ? JSON.parse(readFileSync(SESSION, 'utf8')) : null;
+const envSession = fromEnv(); // cloud routine: PICOOC_SESSION (see session.mjs)
+let s = envSession ?? (existsSync(SESSION) ? JSON.parse(readFileSync(SESSION, 'utf8')) : null);
 if (s && (s.server !== API || !s.login_resp)) s = null;
+if (!s && envSession !== null) throw new Error('PICOOC_SESSION 与服务器不符');
+if (!s && process.env.PICOOC_SESSION === undefined && !process.stdin.isTTY) throw new Error('没有登录会话：先在终端里运行 node cloud.mjs 登录');
 if (loginOnly) { await login(); console.log('已保存登录会话到 session.json'); process.exit(0); }
 if (!s) s = await login(); else deviceId = s.device_id;
 console.log(`已登录 user_id=${s.user_id}，成员: ${Object.values(s.roles).join(', ')}`);

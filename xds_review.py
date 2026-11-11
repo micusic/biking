@@ -25,7 +25,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
 from xds_bin2fit import TZ  # noqa: E402
 from xds_dashboard import REVIEWS, build, collect  # noqa: E402
-from xds_body import load as load_body, summary as body_summary  # noqa: E402
+from xds_body import load as load_body, summary as body_summary, update as update_body  # noqa: E402
 from xds_fatigue import assess as fatigue  # noqa: E402
 from xds_sync import INDEX, RAW, apply_corrections  # noqa: E402
 from xds_weather import TEMP_HR_PER_10C  # noqa: E402
@@ -190,7 +190,10 @@ def packet_for(r, data, segdefs, reviews):
 
 
 def pending(sync=True):
+    global BODY
     if sync:
+        update_body()  # before the sync: it rebuilds the dashboard, which shows the weight too
+        BODY = load_body()
         import xds_sync
         xds_sync.main()
     os.makedirs(REVIEWS, exist_ok=True)

@@ -18,7 +18,7 @@ claude.ai 上的 Routine「骑行点评（每天 20:30）」（https://claude.ai
 点评「整体 / 爬坡路段 / 无灯路段」→ `python xds_review.py save` 写入点评 → 提交推送回 main。没有新骑行时只在
 `rides/reviews/runs.log` 记一行「无新增」。
 
-- 云端环境 **Personal**：环境变量 `XDS_UID`、`XDS_TOKEN`（喜德盛登录凭证）；网络白名单含 `prdapi.xdsiot.com`、
+- 云端环境 **Personal**：环境变量 `XDS_UID`、`XDS_TOKEN`（喜德盛登录凭证）、`PICOOC_SESSION`（有品体脂秤，见「体重」）；网络白名单含 `prdapi.xdsiot.com`、
   `nominatim.openstreetmap.org`、`archive-api.open-meteo.com`、`api.open-meteo.com`。不能连接任何 claude.ai 连接器。
 - 点评存在 `rides/reviews/<日期>_<id>.json`，汇总在 `rides/reviews/journal.md`；展示页的骑行详情里有「教练点评」卡片。
 - 本机双击 `骑行记录.cmd` 会先 `git pull` 拿到云端的新数据和点评，再生成页面。
@@ -75,8 +75,13 @@ claude.ai 上的 Routine「骑行点评（每天 20:30）」（https://claude.ai
 
 ## 体重（展示页「趋势 → 身体」、每次点评）
 
-数据来自有品体脂秤，在 `picooc/`：先 `node cloud.mjs` 拉云端，再 `node report.mjs` 合并生成 `picooc/body_data.csv`，
-然后 **commit + push**（云端点评读的是仓库里的这份 CSV）。电脑蓝牙直接读秤：双击 `picooc/weigh.bat` 后上秤。
+数据来自有品体脂秤，在 `picooc/`。**照常上秤、让手机 App 同步到有品云端就行**：云端点评每天先运行
+`node cloud.mjs` → `node report.mjs` 拉最新数据、生成 `picooc/body_data.csv`，和点评一起推送回来（`xds_body.update()`）。
+
+- 云端用的是 Personal 环境的环境变量 `PICOOC_SESSION`：只含下载需要的服务器、设备 id、用户 id、成员 id（不含手机号和第三方 token）。
+  设置/更新：本机 `node picooc/session.mjs --copy`（复制到剪贴板，不显示）→ 粘贴到 Personal 环境的 `PICOOC_SESSION`。
+- 会话失效时（runs.log 或点评回复里出现「体重：… 失败」）：本机删掉 `picooc/session.json`，运行 `node picooc/cloud.mjs` 重新登录，再按上一条更新。
+- 本机也可以手动拉：`node cloud.mjs` → `node report.mjs`，然后 commit + push。电脑蓝牙直接读秤：双击 `picooc/weigh.bat` 后上秤（这些读数只在本机，记得推送 `picooc/weights.csv`）。
 `xds_body.py` 读取时去掉 `abnormal=1` 和 `excluded_reason` 不为空的行（想排除哪次，往 `picooc/exclude.json` 加一行再跑 report.mjs）。
 
 - 体重最可靠；体脂、去脂体重是秤的估算值，晚上比早上低约 2 个百分点，**只在同一时段之间比较**（页面上的脂肪量只用晚上的读数）。
