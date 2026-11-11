@@ -73,6 +73,16 @@ claude.ai 上的 Routine「骑行点评（每天 20:30）」（https://claude.ai
 0 项 = 正常，1 项 = 留意（睡够吃够，暂停强度日），2 项以上 = 建议休息 1–2 天。用全部历史回测：6/9 春季连续加量后
 红灯恢复变差时亮过「建议休息」，夏天停骑期间多次「留意」，9–10 月恢复后基本正常。
 
+## 体重（展示页「趋势 → 身体」、每次点评）
+
+数据来自有品体脂秤，在 `picooc/`：先 `node cloud.mjs` 拉云端，再 `node report.mjs` 合并生成 `picooc/body_data.csv`，
+然后 **commit + push**（云端点评读的是仓库里的这份 CSV）。电脑蓝牙直接读秤：双击 `picooc/weigh.bat` 后上秤。
+`xds_body.py` 读取时去掉 `abnormal=1` 和 `excluded_reason` 不为空的行（想排除哪次，往 `picooc/exclude.json` 加一行再跑 report.mjs）。
+
+- 体重最可靠；体脂、去脂体重是秤的估算值，晚上比早上低约 2 个百分点，**只在同一时段之间比较**（页面上的脂肪量只用晚上的读数）。
+- 点评只在最近 7 天内称过时才提体重；超过 14 天没称就提醒称重。
+- 🔒 `picooc/session.json`（有品登录会话）和 `picooc/cloud_raw.json`（含手机号）已在 `.gitignore`，**绝不能提交或外传**。
+
 ## 气温
 
 原始骑行数据里**没有温度**。`xds_weather.py` 按骑行时段从 Open-Meteo 取西安市区（只发市中心坐标，不发轨迹）的逐小时

@@ -25,23 +25,28 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
 from xds_bin2fit import TZ  # noqa: E402
 from xds_dashboard import REVIEWS, build, collect  # noqa: E402
+from xds_body import load as load_body, summary as body_summary  # noqa: E402
 from xds_fatigue import assess as fatigue  # noqa: E402
 from xds_sync import INDEX, RAW, apply_corrections  # noqa: E402
 from xds_weather import TEMP_HR_PER_10C  # noqa: E402
 
 STATE = os.path.join(REVIEWS, "state.json")
+BODY = load_body()
 JOURNAL = os.path.join(REVIEWS, "journal.md")
 HR_PER_W = 0.27  # bpm per watt between rides (regression on ride HR vs power and training load)
 WD = "一二三四五六日"
 PROFILE = dict(
-    age=datetime.date.today().year - 1987, weight_kg=73, height_cm=178, hr_max_est=181, hr_max_seen=176,
-    goals=["心肺功能提高", "肌肉力量提高"],
+    age=datetime.date.today().year - 1987, height_cm=178, hr_max_est=181, hr_max_seen=176,
+    goals=["心肺功能提高", "肌肉力量提高", "减脂减重"],
     temperature_note=("原始骑行数据没有温度，weather 来自公开天气数据。气温低时同功率心率会自然偏低，"
                       "评价心肺时先扣掉 weather.expected_same_power_hr_shift_from_temperature 再和基线比。"),
     context=("主要是上下班通勤：上班约 56 分钟（9:30 前到）、下班约 60 分钟（18:00 前到），时间固定，不能刻意放慢；"
              "下班爬升约是上班的两倍；路况复杂，不在通勤中做全力冲刺测试。能控制的只有两段：出门爬坡和丈八东路无灯段，"
              "两段都按功率骑、心率只看上限。体能跟训练量走：7–8 月天热停骑，各项指标明显下降，9 月恢复。"),
     hr_rule="hr_quality.status 为 suspect/bad 的骑行，心率数据不可信，不要据此评价心肺或给出心率相关结论。",
+    body_rule=("body 是有品体脂秤的最近读数（体重最可靠，体脂/去脂体重是估算）。只有 body.days_since ≤ 7 时才在「整体」里提体重："
+               "每周减 0.25–0.5 kg 合适；掉得更快、同时同功率心率偏高或功率下降，提醒吃够热量和蛋白质（约 1.5 g/kg）。"
+               "超过 14 天没称就提醒一句每周固定一天称重，不评价体重。"),
     fatigue_rule=("fatigue 是截至这次骑行的疲劳信号（同功率心率、红灯恢复、加量速度、连续骑行，各自和本人历史比）。"
                   "「整体」里要说一句疲劳状态：正常就简短带过；留意/建议休息时说明是哪个信号、建议怎么调整"
                   "（睡眠、吃饭、暂停强度日或休息 1–2 天）。不要单凭一次心率偏高就判断过度训练。"),
@@ -179,6 +184,7 @@ def packet_for(r, data, segdefs, reviews):
         segments=segs,
         training=training(data, r["start"]),
         fatigue=fatigue(data, r["end"]),
+        body=body_summary(BODY, r["end"]),
         previous_reviews=[dict(when=v["when"], overall=v["overall"][:160]) for v in prev_reviews],
     )
 
@@ -227,6 +233,10 @@ def journal_entry(p, rv):
     t = p["training"]
     if t:
         lines.append(f"- 训练量：{t['load_now']}（最高的 {t['load_pct_of_peak']}%），近 7 天骑 {t['riding_days_last_7']} 天")
+    b = p.get("body")
+    if b and b["days_since"] <= 7:
+        ch = f"，近 30 天 {b['change_30d_kg']:+} kg" if b.get("change_30d_kg") is not None else ""
+        lines.append(f"- 体重：{b['weight_kg']} kg（{b['last_weighed'][5:10]} 称{ch}）")
     fa = p.get("fatigue")
     if fa:
         why = "；".join(s["detail"] for s in fa["signals"] if s["flag"])

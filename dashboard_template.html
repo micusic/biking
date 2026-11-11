@@ -377,6 +377,11 @@ table.splits { width: 100%; border-collapse: collapse; font-size: 13px; }
     <div class="card"><div class="hd"><h2>每周骑行时长</h2><span class="aside">小时 · 深色 = 当周骑了 3 天以上</span></div><div class="bd"><div id="tWeek"></div></div></div>
     <div class="card"><div class="hd"><h2>训练量</h2><span class="aside">近 6 周平均每天做功（kJ）</span></div><div class="bd"><div class="tlegend" id="lgCtl"></div><div id="tCtl"></div><div class="muted tfoot" id="ctlFoot"></div></div></div>
   </div>
+  <h3 class="tsec">身体<small>有品体脂秤 · 体重最可靠，体脂是估算</small></h3>
+  <div class="trend-grid">
+    <div class="card"><div class="hd"><h2>体重</h2><span class="aside">kg · 每次称重</span></div><div class="bd"><div class="tlegend" id="lgWt"></div><div id="tWt"></div><div class="muted tfoot" id="wtFoot"></div></div></div>
+    <div class="card"><div class="hd"><h2>脂肪量</h2><span class="aside">kg · 只用晚上的读数 · 估算</span></div><div class="bd"><div class="tlegend" id="lgFat"></div><div id="tFat"></div><div class="muted tfoot">秤按阻抗估算，单次误差约 ±2 个百分点（约 1.5 kg），看月中位数的走势。晚上读数比早上低约 2 个百分点，所以只用晚上的。</div></div></div>
+  </div>
   <h3 class="tsec">通勤表现<small>参考：受地形、路况影响大</small></h3>
   <div class="trend-grid">
     <div class="card"><div class="hd"><h2>通勤速度</h2><span class="aside">km/h · 骑行中</span></div><div class="bd"><div class="tlegend" id="lgSpd"></div><div id="tSpd"></div></div></div>
@@ -1052,6 +1057,23 @@ function drawTrends() {
     tile('丈八东路强度日', null, hardBest ? hardBest.pw : null, 'W', 0, false, hardBest ? `最好一次 ${md(hardBest.ride.start)} · ${mmss(hardBest.secs)}` : '还没有强度日，目标 170–190 W') +
     tile('训练量', peak ? peak.v : null, ctlPts.length ? ctlPts[ctlPts.length - 1].v : null, '', 0, false, peak ? `最高时的 ${Math.round(ctlPts[ctlPts.length - 1].v / peak.v * 100)}%` : '');
   drawFatigue();
+
+  /* ---- 身体 ---- */
+  const B = (DATA.body || []).map(([t, tod, w, fat, lean]) => ({ start: t, tod, w, fat, lean }));
+  const TOD = { morning: '早上', evening: '晚上', other: '其他时间' };
+  const bLabel = b => `${md(b.start)} ${TOD[b.tod] || ''}${b.lean != null ? ` · 去脂 ${fmt(b.lean, 1)} kg` : ''}<br>`;
+  legend('lgWt', [['--accent', '晚上'], ['--speed', '早上'], ['--text-primary', '月中位数（全部）', 'bar']]);
+  timeChart($('tWt'), { unit: 'kg', d: 1,
+    dots: B.map(b => ({ t: b.start, v: b.w, c: b.tod === 'morning' ? '--speed' : '--accent', label: bLabel(b) })),
+    lines: [{ name: '月中位数', c: '--text-primary', pts: monthly(B, b => b.w, median) }] });
+  const lastB = B[B.length - 1], ago = lastB ? Math.round((now - lastB.start) / DAY) : null;
+  $('wtFoot').textContent = !lastB ? '还没有称重数据（picooc/body_data.csv）。'
+    : `最近一次 ${md(lastB.start)}，${fmt(lastB.w, 1)} kg${ago > 14 ? `，已经 ${ago} 天没称了：每周固定一天、同一时段称一次就够` : ''}。`;
+  const BF = B.filter(b => b.tod === 'evening' && b.fat != null);
+  legend('lgFat', [['--power', '每次（晚上）'], ['--text-primary', '月中位数', 'bar']]);
+  timeChart($('tFat'), { unit: 'kg', d: 1,
+    dots: BF.map(b => ({ t: b.start, v: b.fat, c: '--power', label: bLabel(b) })),
+    lines: [{ name: '月中位数', c: '--text-primary', pts: monthly(BF, b => b.fat, median) }] });
   $('trendNote').textContent = `${com.length} 次通勤 · 心率存疑的骑行不参与心率指标`;
 }
 function weekBars(box, weeks) {

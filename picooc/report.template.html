@@ -1,0 +1,346 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>体重体脂趋势</title>
+<style>
+:root {
+  color-scheme: light;
+  --page: #f9f9f7; --surface: #fcfcfb; --ink: #0b0b0b; --ink-2: #52514e; --muted: #898781;
+  --grid: #e1e0d9; --axis: #c3c2b7; --ring: rgba(11,11,11,0.10); --good: #006300; --bad: #d03b3b;
+  --s1: #2a78d6; --s2: #eb6834; --s3: #1baf7a; --s4: #eda100; --s5: #e87ba4; --s6: #008300; --s7: #6250d6; --s8: #e34948;
+}
+@media (prefers-color-scheme: dark) {
+  :root:where(:not([data-theme="light"])) {
+    color-scheme: dark;
+    --page: #0d0d0d; --surface: #1a1a19; --ink: #f0efec; --ink-2: #c3c2b7; --muted: #898781;
+    --grid: #2c2c2a; --axis: #383835; --ring: rgba(255,255,255,0.10); --good: #0ca30c; --bad: #e66767;
+    --s1: #3987e5; --s2: #d95926; --s3: #199e70; --s4: #c98500; --s5: #d55181; --s6: #008300; --s7: #9085e9; --s8: #e66767;
+  }
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--page); color: var(--ink); font: 14px/1.5 system-ui, -apple-system, "Segoe UI", "Microsoft YaHei", sans-serif; }
+main { max-width: 1180px; margin: 0 auto; padding: 24px 16px 64px; }
+h1 { font-size: 22px; margin: 0 0 4px; }
+h2 { font-size: 16px; margin: 32px 0 12px; }
+.sub { color: var(--ink-2); margin: 0 0 20px; }
+.filters { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; margin: 0 0 16px; position: sticky; top: 0; background: var(--page); padding: 8px 0; z-index: 5; }
+.filters button { font: inherit; padding: 5px 12px; border-radius: 999px; border: 1px solid var(--ring); background: var(--surface); color: var(--ink-2); cursor: pointer; }
+.filters button[aria-pressed="true"] { background: var(--ink); color: var(--surface); border-color: var(--ink); }
+.filters .note { color: var(--muted); font-size: 12px; margin-left: 8px; }
+.filters .sep { width: 1px; height: 20px; background: var(--axis); margin: 0 6px; }
+.callout { background: var(--surface); border: 1px solid var(--ring); border-left: 3px solid var(--s1); border-radius: 8px; padding: 10px 14px; color: var(--ink-2); margin: 0 0 12px; }
+.tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; }
+.tile { background: var(--surface); border: 1px solid var(--ring); border-radius: 12px; padding: 14px 16px; }
+.tile .k { color: var(--ink-2); font-size: 12px; }
+.tile .v { font-size: 26px; font-weight: 600; margin-top: 2px; }
+.tile .d { font-size: 12px; color: var(--ink-2); margin-top: 2px; }
+.up { color: var(--bad); } .down { color: var(--good); }
+.card { background: var(--surface); border: 1px solid var(--ring); border-radius: 12px; padding: 14px 16px 8px; position: relative; }
+.card h3 { margin: 0; font-size: 14px; }
+.card .meta { color: var(--ink-2); font-size: 12px; margin: 2px 0 6px; }
+.legend { display: flex; gap: 14px; font-size: 12px; color: var(--ink-2); margin-bottom: 4px; }
+.legend i { display: inline-block; vertical-align: middle; margin-right: 5px; }
+.grid2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 12px; margin-top: 12px; }
+svg { display: block; width: 100%; overflow: visible; }
+svg text { fill: var(--muted); font-size: 11px; font-variant-numeric: tabular-nums; }
+.tip { position: absolute; pointer-events: none; background: var(--ink); color: var(--surface); font-size: 12px; padding: 6px 9px; border-radius: 8px; white-space: nowrap; opacity: 0; transition: opacity .1s; z-index: 3; }
+.insights { background: var(--surface); border: 1px solid var(--ring); border-radius: 12px; padding: 4px 18px; }
+.insights li { margin: 10px 0; }
+table { width: 100%; border-collapse: collapse; font-size: 13px; font-variant-numeric: tabular-nums; background: var(--surface); border: 1px solid var(--ring); border-radius: 12px; overflow: hidden; }
+th, td { text-align: right; padding: 6px 10px; border-bottom: 1px solid var(--grid); white-space: nowrap; }
+th:first-child, td:first-child { text-align: left; }
+th { color: var(--ink-2); font-weight: 600; position: sticky; top: 0; background: var(--surface); }
+.tablewrap { max-height: 520px; overflow: auto; border-radius: 12px; }
+.flag { color: var(--muted); font-size: 11px; }
+.foot { color: var(--muted); font-size: 12px; margin-top: 28px; }
+@media (max-width: 600px) { .grid2 { grid-template-columns: 1fr; } .tile .v { font-size: 22px; } }
+</style>
+</head>
+<body>
+<main>
+  <h1>体重与体成分趋势</h1>
+  <p class="sub" id="sub"></p>
+
+  <div class="filters" role="group" aria-label="时间范围">
+    <button data-range="all">全部</button>
+    <button data-range="1825">近 5 年</button>
+    <button data-range="365">近 1 年</button>
+    <button data-range="180">近 6 个月</button>
+    <button data-range="90">近 3 个月</button>
+    <span class="sep"></span>
+    <button data-tod="all">全天</button>
+    <button data-tod="am">早上 5–11 点</button>
+    <button data-tod="pm">晚上 16–24 点</button>
+    <span class="note" id="rangeNote"></span>
+  </div>
+
+  <div class="tiles" id="tiles"></div>
+
+  <h2>体重</h2>
+  <div class="card" id="c-weight"></div>
+
+  <h2>体成分</h2>
+  <div class="grid2">
+    <div class="card" id="c-fat"></div>
+    <div class="card" id="c-fatkg"></div>
+    <div class="card" id="c-lean"></div>
+    <div class="card" id="c-muscle"></div>
+    <div class="card" id="c-water"></div>
+    <div class="card" id="c-visceral"></div>
+    <div class="card" id="c-imp"></div>
+    <div class="card" id="c-bmr"></div>
+  </div>
+
+  <h2>分析</h2>
+  <ul class="insights" id="insights"></ul>
+
+  <h2>早晚对比</h2>
+  <p class="callout" id="todNote"></p>
+  <div class="tablewrap"><table id="tod"></table></div>
+
+  <h2>按年汇总</h2>
+  <div class="tablewrap"><table id="years"></table></div>
+
+  <h2>全部记录 <span class="flag" id="recCount"></span></h2>
+  <div class="tablewrap"><table id="records"></table></div>
+
+  <p class="foot">体脂、肌肉、水分等是有品云端用自己的算法算出的值；"蓝牙"来源的记录只有体重和阻抗。被有品标记为异常的测量不参与趋势和分析，但会列在记录表里。生成于 __GENERATED__。</p>
+</main>
+
+<script>
+const ALL = /*__DATA__*/[];
+const HEIGHT = __HEIGHT__;
+const DAY = 86400;
+const fmtD = t => new Date(t * 1000).toLocaleDateString('sv-SE');
+const fmtDT = t => new Date(t * 1000).toLocaleString('sv-SE').slice(0, 16);
+const css = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+
+// Usable rows: not flagged abnormal by PICOOC and not excluded by you (exclude.json).
+const ok = ALL.filter(r => !r.abnormal && !r.excluded && r.weight > 0);
+const hourOf = t => new Date(t * 1000).getHours();
+const isAM = t => { const h = hourOf(t); return h >= 5 && h < 11; };
+const isPM = t => { const h = hourOf(t); return h >= 16; };
+ok.forEach(r => {
+  if (r.fat != null) { r.fatKg = +(r.weight * r.fat / 100).toFixed(2); r.lean = +(r.weight - r.fatKg).toFixed(2); }
+});
+
+const METRICS = {
+  weight:   { el: 'c-weight',   key: 'weight',   name: '体重',     unit: 'kg',  color: '--s1', dp: 1, h: 300, note: '每次测量 + 30 天滑动均值' },
+  fat:      { el: 'c-fat',      key: 'fat',      name: '体脂率',   unit: '%',   color: '--s2', dp: 1 },
+  fatkg:    { el: 'c-fatkg',    key: 'fatKg',    name: '脂肪重量', unit: 'kg',  color: '--s2', dp: 1, note: '体重 × 体脂率' },
+  lean:     { el: 'c-lean',     key: 'lean',     name: '去脂体重', unit: 'kg',  color: '--s3', dp: 1, note: '体重 − 脂肪重量（肌肉、骨骼、水分等）' },
+  muscle:   { el: 'c-muscle',   key: 'muscle',   name: '肌肉率',   unit: '%',   color: '--s3', dp: 1 },
+  water:    { el: 'c-water',    key: 'water',    name: '水分',     unit: '%',   color: '--s1', dp: 1 },
+  visceral: { el: 'c-visceral', key: 'visceral', name: '内脏脂肪等级', unit: '', color: '--s7', dp: 0 },
+  imp:      { el: 'c-imp',      key: 'imp',      name: '阻抗',     unit: 'Ω',   color: '--s7', dp: 0, note: '秤测到的原始值，受饮水、运动、脚底干湿影响大' },
+  bmr:      { el: 'c-bmr',      key: 'bmr',      name: '基础代谢', unit: 'kcal', color: '--s4', dp: 0 },
+};
+
+// 30-day trailing mean, broken across gaps longer than 60 days so it never bridges years of silence.
+function trend(points, win = 30 * DAY, gap = 60 * DAY) {
+  const out = [];
+  for (let i = 0; i < points.length; i++) {
+    const p = points[i];
+    if (i > 0 && p.t - points[i - 1].t > gap) out.push(null);
+    let s = 0, n = 0;
+    for (let j = i; j >= 0 && p.t - points[j].t <= win; j--) { s += points[j].v; n++; }
+    out.push({ t: p.t, v: s / n });
+  }
+  return out;
+}
+
+let range = 'all', tod = 'all';
+function inRange(rows) {
+  const last = ok.length ? ok[ok.length - 1].t : Date.now() / 1000;
+  return rows.filter(r => (range === 'all' || r.t >= last - (+range) * DAY) &&
+    (tod === 'all' || (tod === 'am' ? isAM(r.t) : isPM(r.t))));
+}
+const todLabel = () => tod === 'am' ? '早上' : tod === 'pm' ? '晚上' : '';
+
+function niceTicks(min, max, n = 4) {
+  const span = max - min || 1, step0 = span / n, mag = 10 ** Math.floor(Math.log10(step0));
+  const step = [1, 2, 2.5, 5, 10].map(m => m * mag).find(s => s >= step0);
+  const ticks = []; for (let v = Math.ceil(min / step) * step; v <= max + 1e-9; v += step) ticks.push(+v.toFixed(6));
+  return ticks;
+}
+
+function chart(m) {
+  const box = document.getElementById(m.el);
+  // Trend is computed within the chosen time of day, so morning and evening never get averaged together.
+  const all = ok.filter(r => r[m.key] != null && r[m.key] > 0 && (tod === 'all' || (tod === 'am' ? isAM(r.t) : isPM(r.t))))
+    .map(r => ({ t: r.t, v: r[m.key], r }));
+  const tr = trend(all);
+  const pts = inRange(all);
+  const t0 = pts.length ? pts[0].t : 0, t1 = pts.length ? pts[pts.length - 1].t : 1;
+  const trv = tr.filter(p => !p || (p.t >= t0 && p.t <= t1));
+  const last = pts[pts.length - 1];
+  box.innerHTML = `<h3>${m.name}${m.unit ? `（${m.unit}）` : ''}${tod !== 'all' ? ` · 仅${todLabel()}` : ''}</h3>
+    <div class="meta">${pts.length ? `${pts.length} 次测量 · 最近 ${last.v.toFixed(m.dp)}${m.unit} (${fmtD(last.t)})` : '这个时间段没有数据'}${m.note ? ' · ' + m.note : ''}</div>
+    <div class="legend"><span><i style="width:8px;height:8px;border-radius:50%;background:var(${m.color});opacity:.45"></i>每次测量</span><span><i style="width:16px;height:2px;background:var(${m.color})"></i>30 天均值</span></div>`;
+  if (!pts.length) return;
+  const W = Math.max(300, box.clientWidth - 32), H = m.h || 190, L = 40, R = 10, T = 8, B = 22;
+  const vs = pts.map(p => p.v); let lo = Math.min(...vs), hi = Math.max(...vs);
+  const pad = (hi - lo) * 0.08 || 1; lo -= pad; hi += pad;
+  const span = Math.max(t1 - t0, DAY);
+  const x = t => L + (t - t0) / span * (W - L - R), y = v => T + (1 - (v - lo) / (hi - lo)) * (H - T - B);
+  const yt = niceTicks(lo, hi);
+  const years = (t1 - t0) > 400 * DAY;
+  const xt = []; const d0 = new Date(t0 * 1000), d1 = new Date(t1 * 1000);
+  if (years) { for (let yv = d0.getFullYear() + 1; yv <= d1.getFullYear(); yv++) xt.push([new Date(yv, 0, 1) / 1000, String(yv)]); }
+  else { const d = new Date(d0.getFullYear(), d0.getMonth() + 1, 1); while (d <= d1) { xt.push([d / 1000, `${d.getMonth() + 1}月`]); d.setMonth(d.getMonth() + (span > 200 * DAY ? 2 : 1)); } }
+  let path = '', pen = false;
+  for (const p of trv) { if (!p) { pen = false; continue; } path += `${pen ? 'L' : 'M'}${x(p.t).toFixed(1)},${y(p.v).toFixed(1)}`; pen = true; }
+  const svg = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${m.name}趋势">
+    ${yt.map(v => `<line x1="${L}" x2="${W - R}" y1="${y(v)}" y2="${y(v)}" stroke="var(--grid)" stroke-width="1"/><text x="${L - 6}" y="${y(v) + 4}" text-anchor="end">${v}</text>`).join('')}
+    <line x1="${L}" x2="${W - R}" y1="${H - B}" y2="${H - B}" stroke="var(--axis)"/>
+    ${xt.map(([t, s]) => `<text x="${x(t)}" y="${H - 6}" text-anchor="middle">${s}</text>`).join('')}
+    ${pts.map(p => `<circle cx="${x(p.t).toFixed(1)}" cy="${y(p.v).toFixed(1)}" r="${pts.length > 300 ? 2.5 : 4}" fill="var(${m.color})" fill-opacity=".45"/>`).join('')}
+    <path d="${path}" fill="none" stroke="var(${m.color})" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+    <g class="hover" style="display:none"><line y1="${T}" y2="${H - B}" stroke="var(--ink-2)" stroke-dasharray="3 3"/><circle r="5" fill="var(${m.color})" stroke="var(--surface)" stroke-width="2"/></g>
+    <rect x="${L}" y="${T}" width="${W - L - R}" height="${H - T - B}" fill="transparent"/></svg><div class="tip"></div>`;
+  box.insertAdjacentHTML('beforeend', svg);
+  const s = box.querySelector('svg'), hov = s.querySelector('.hover'), tip = box.querySelector('.tip');
+  const trAt = t => { let best = null; for (const p of trv) if (p && p.t <= t) best = p; return best; };
+  s.addEventListener('pointermove', e => {
+    const rect = s.getBoundingClientRect(), px = (e.clientX - rect.left) * W / rect.width;
+    let best = pts[0]; for (const p of pts) if (Math.abs(x(p.t) - px) < Math.abs(x(best.t) - px)) best = p;
+    const cx = x(best.t), cy = y(best.v);
+    hov.style.display = ''; hov.querySelector('line').setAttribute('x1', cx); hov.querySelector('line').setAttribute('x2', cx);
+    hov.querySelector('circle').setAttribute('cx', cx); hov.querySelector('circle').setAttribute('cy', cy);
+    const tv = trAt(best.t);
+    tip.innerHTML = `${fmtDT(best.t)}<br><b>${best.v.toFixed(m.dp)}${m.unit}</b>${tv ? ` · 30 天均值 ${tv.v.toFixed(m.dp)}` : ''}${best.r.src === 'bluetooth' ? ' · 蓝牙' : ''}`;
+    tip.style.opacity = 1;
+    const left = 16 + cx * rect.width / W, top = box.querySelector('svg').offsetTop + cy * rect.height / H;
+    tip.style.left = Math.min(left + 12, box.clientWidth - tip.offsetWidth - 8) + 'px'; tip.style.top = (top - 44) + 'px';
+  });
+  s.addEventListener('pointerleave', () => { hov.style.display = 'none'; tip.style.opacity = 0; });
+}
+
+function nearest(rows, t, key) { // value of the latest row at or before t that has key
+  let best = null; for (const r of rows) if (r.t <= t && r[key] != null) best = r; return best;
+}
+
+function tiles() {
+  const rows = inRange(ok), last = ok[ok.length - 1];
+  const lastComp = [...ok].reverse().find(r => r.fat != null);
+  const back = (days, key = 'weight') => nearest(ok, last.t - days * DAY, key);
+  const delta = (a, b, dp = 1, unit = 'kg') => {
+    if (!a || !b) return '—';
+    const d = a - b, cls = d > 0 ? 'up' : d < 0 ? 'down' : '';
+    return `<span class="${cls}">${d > 0 ? '+' : ''}${d.toFixed(dp)} ${unit}</span>`;
+  };
+  const w30 = back(30), w365 = back(365);
+  const bmi = last.weight / (HEIGHT / 100) ** 2;
+  const minW = rows.reduce((a, r) => r.weight < a.weight ? r : a, rows[0] || last);
+  document.getElementById('tiles').innerHTML = `
+    <div class="tile"><div class="k">最近体重 · ${fmtD(last.t)}</div><div class="v">${last.weight.toFixed(1)} kg</div><div class="d">BMI ${bmi.toFixed(1)}</div></div>
+    <div class="tile"><div class="k">比 30 天前</div><div class="v">${delta(last.weight, w30?.weight)}</div><div class="d">${w30 ? '对比 ' + fmtD(w30.t) + ' 的 ' + w30.weight.toFixed(1) : ''}</div></div>
+    <div class="tile"><div class="k">比 1 年前</div><div class="v">${delta(last.weight, w365?.weight)}</div><div class="d">${w365 ? '对比 ' + fmtD(w365.t) + ' 的 ' + w365.weight.toFixed(1) : ''}</div></div>
+    <div class="tile"><div class="k">最近体脂率 · ${lastComp ? fmtD(lastComp.t) : ''}</div><div class="v">${lastComp ? lastComp.fat.toFixed(1) + '%' : '—'}</div><div class="d">${lastComp ? '脂肪 ' + lastComp.fatKg.toFixed(1) + ' kg · 去脂 ' + lastComp.lean.toFixed(1) + ' kg' : ''}</div></div>
+    <div class="tile"><div class="k">所选范围最低</div><div class="v">${minW ? minW.weight.toFixed(1) + ' kg' : '—'}</div><div class="d">${minW ? fmtD(minW.t) : ''}</div></div>
+    <div class="tile"><div class="k">所选范围测量</div><div class="v">${rows.length} 次</div><div class="d">${rows.length ? fmtD(rows[0].t) + ' 起' : ''}</div></div>`;
+}
+
+function insights() {
+  const rows = inRange(ok), comp = rows.filter(r => r.fat != null);
+  const li = [];
+  if (rows.length >= 2) {
+    const tw = trend(rows.map(r => ({ t: r.t, v: r.weight }))).filter(Boolean);
+    const a = tw[0], b = tw[tw.length - 1], months = (b.t - a.t) / (30.44 * DAY);
+    const d = b.v - a.v;
+    li.push(`按 30 天均值算，体重从 <b>${a.v.toFixed(1)}</b> 到 <b>${b.v.toFixed(1)} kg</b>，${d < 0 ? '减少' : '增加'} <b>${Math.abs(d).toFixed(1)} kg</b>` + (months >= 1 ? `，平均每月 ${d < 0 ? '−' : '+'}${Math.abs(d / months).toFixed(2)} kg。` : '。'));
+  }
+  if (comp.length >= 2) {
+    // Compare 30-day means at both ends, not single readings: one noisy measurement would
+    // otherwise decide the whole fat-vs-lean split.
+    const ends = key => { const tr = trend(comp.map(r => ({ t: r.t, v: r[key] }))).filter(Boolean); return [tr[0].v, tr[tr.length - 1].v]; };
+    const [fF, lF] = ends('fatKg'), [fL, lL] = ends('lean');
+    const dF = lF - fF, dL = lL - fL, dW = dF + dL;
+    const f = comp[0], l = comp[comp.length - 1];
+    let s = `体成分（30 天均值，${fmtD(f.t)} → ${fmtD(l.t)}）：脂肪 ${dF >= 0 ? '+' : ''}${dF.toFixed(1)} kg，去脂体重 ${dL >= 0 ? '+' : ''}${dL.toFixed(1)} kg。`;
+    if (dW < -0.5) s += dF < 0 ? ` 减掉的 ${Math.abs(dW).toFixed(1)} kg 里约 <b>${Math.min(100, Math.max(0, dF / dW * 100)).toFixed(0)}%</b> 是脂肪。` : ' 体重下降但脂肪没降，主要是去脂体重（水分/肌肉）在掉，值得留意。';
+    if (dW > 0.5) s += dF > 0 ? ` 增加的 ${dW.toFixed(1)} kg 里约 <b>${Math.min(100, Math.max(0, dF / dW * 100)).toFixed(0)}%</b> 是脂肪。` : ' 体重上升主要来自去脂体重。';
+    li.push(s);
+    const fats = comp.map(r => r.fat), mean = fats.reduce((a, b) => a + b, 0) / fats.length;
+    const sd = Math.sqrt(fats.reduce((a, b) => a + (b - mean) ** 2, 0) / fats.length);
+    li.push(`体脂率在这段时间均值 ${mean.toFixed(1)}%，标准差 ${sd.toFixed(1)} 个百分点。单次读数上下跳 2–3 个点是常见的测量噪声（阻抗受喝水、出汗、脚底湿度影响），看 30 天均值更可靠。`);
+  }
+  if (rows.length >= 2) {
+    let gap = 0, ga = null;
+    for (let i = 1; i < rows.length; i++) { const g = rows[i].t - rows[i - 1].t; if (g > gap) { gap = g; ga = rows[i - 1]; } }
+    if (gap > 60 * DAY) li.push(`最长的空档是 ${fmtD(ga.t)} 之后的 <b>${Math.round(gap / DAY)} 天</b>没有测量，这段时间的趋势线是断开的。`);
+    const days = (rows[rows.length - 1].t - rows[0].t) / DAY;
+    if (days > 30) li.push(`平均每 ${(days / rows.length).toFixed(1)} 天测一次。每周固定 2–3 次、同一时间（比如早上起床上完厕所、空腹）测，趋势会准很多。`);
+  }
+  if (tod === 'all' && comp.length) {
+    const am = comp.filter(r => isAM(r.t)), pm = comp.filter(r => isPM(r.t));
+    if (am.length >= 3 && pm.length >= 3) {
+      const mf = a => a.reduce((s, r) => s + r.fat, 0) / a.length;
+      li.push(`这段时间早上测了 ${am.length} 次、晚上 ${pm.length} 次，晚上的平均体脂率比早上<b>低 ${(mf(am) - mf(pm)).toFixed(1)} 个百分点</b>。早晚混在一起看趋势会失真，用上方「早上」或「晚上」筛选再看。`);
+    }
+  }
+  const ab = inRange(ALL).filter(r => r.abnormal).length, ex = inRange(ALL).filter(r => r.excluded).length;
+  if (ab) li.push(`有 ${ab} 条被有品标记为异常的测量，没有算进上面的数字。`);
+  if (ex) li.push(`有 ${ex} 条被你手动排除（见 exclude.json，比如穿衣服称的），没有算进上面的数字。`);
+  const bmi = ok[ok.length - 1].weight / (HEIGHT / 100) ** 2;
+  li.push(`按身高 ${HEIGHT} cm，最近 BMI ${bmi.toFixed(1)}（18.5–23.9 为中国标准的正常范围）。BMI 不区分肌肉和脂肪，结合体脂率看更有意义。`);
+  document.getElementById('insights').innerHTML = li.map(s => `<li>${s}</li>`).join('');
+}
+
+function yearTable() {
+  const by = {};
+  for (const r of ok) (by[new Date(r.t * 1000).getFullYear()] ??= []).push(r);
+  const avg = (a, k) => { const v = a.filter(r => r[k] != null).map(r => r[k]); return v.length ? (v.reduce((x, y) => x + y, 0) / v.length) : null; };
+  const f = (v, dp = 1) => v == null ? '—' : v.toFixed(dp);
+  document.getElementById('years').innerHTML = `<tr><th>年份</th><th>测量次数</th><th>平均体重</th><th>最低</th><th>最高</th><th>平均体脂率</th><th>平均脂肪重量</th><th>平均去脂体重</th></tr>` +
+    Object.entries(by).map(([y, a]) => `<tr><td>${y}</td><td>${a.length}</td><td>${f(avg(a, 'weight'))}</td><td>${f(Math.min(...a.map(r => r.weight)))}</td><td>${f(Math.max(...a.map(r => r.weight)))}</td><td>${f(avg(a, 'fat'))}</td><td>${f(avg(a, 'fatKg'))}</td><td>${f(avg(a, 'lean'))}</td></tr>`).join('');
+}
+
+function todTable() {
+  const comp = ok.filter(r => r.fat != null);
+  const by = {};
+  for (const r of comp) { const y = new Date(r.t * 1000).getFullYear(); (by[y] ??= { am: [], pm: [] }); if (isAM(r.t)) by[y].am.push(r); else if (isPM(r.t)) by[y].pm.push(r); }
+  const mean = (a, k) => a.length ? a.reduce((s, r) => s + r[k], 0) / a.length : null;
+  const f = (v, dp = 1) => v == null ? '—' : v.toFixed(dp);
+  const row = (label, am, pm) => {
+    const d = am.length && pm.length ? mean(am, 'fat') - mean(pm, 'fat') : null;
+    return `<tr><td>${label}</td><td>${am.length || '—'}</td><td>${f(mean(am, 'weight'))}</td><td>${f(mean(am, 'fat'))}</td><td>${f(mean(am, 'imp'), 0)}</td><td>${pm.length || '—'}</td><td>${f(mean(pm, 'weight'))}</td><td>${f(mean(pm, 'fat'))}</td><td>${f(mean(pm, 'imp'), 0)}</td><td>${d == null ? '—' : (d > 0 ? '+' : '') + d.toFixed(1)}</td></tr>`;
+  };
+  const am = comp.filter(r => isAM(r.t)), pm = comp.filter(r => isPM(r.t));
+  document.getElementById('tod').innerHTML =
+    `<tr><th>年份</th><th>早上次数</th><th>早上体重</th><th>早上体脂率</th><th>早上阻抗</th><th>晚上次数</th><th>晚上体重</th><th>晚上体脂率</th><th>晚上阻抗</th><th>体脂差（早−晚）</th></tr>` +
+    Object.entries(by).map(([y, g]) => row(y, g.am, g.pm)).join('') + row('<b>全部</b>', am, pm);
+  const d = mean(am, 'fat') - mean(pm, 'fat'), dw = mean(am, 'weight') - mean(pm, 'weight');
+  document.getElementById('todNote').innerHTML = `早上（5–11 点）测了 ${am.length} 次，晚上（16–24 点）测了 ${pm.length} 次。整体看，晚上的体脂率比早上<b>低 ${d.toFixed(1)} 个百分点</b>，阻抗低约 ${(mean(am, 'imp') - mean(pm, 'imp')).toFixed(0)} Ω。这不是真实变化：白天喝水吃饭后水分分布改变、阻抗下降，秤就会算出更低的体脂。<b>只拿同一时段的读数互相比较。</b>不同年份早晚的比例不一样，所以这里同一年的早晚差才有意义。`;
+}
+
+function recordTable() {
+  const rows = inRange(ALL).slice().reverse();
+  const f = (v, dp = 1) => v == null ? '—' : (+v).toFixed(dp);
+  document.getElementById('recCount').textContent = `（${rows.length} 条）`;
+  document.getElementById('records').innerHTML = `<tr><th>时间</th><th>体重</th><th>BMI</th><th>体脂率</th><th>皮下脂肪</th><th>内脏脂肪</th><th>肌肉率</th><th>水分</th><th>骨量</th><th>基础代谢</th><th>阻抗</th><th>来源</th></tr>` +
+    rows.map(r => `<tr><td>${fmtDT(r.t)}${r.abnormal ? ' <span class="flag">异常</span>' : ''}${r.excluded ? ` <span class="flag" title="${r.excluded}">已排除</span>` : ''}</td><td>${f(r.weight)}</td><td>${f(r.bmi)}</td><td>${f(r.fat)}</td><td>${f(r.subFat)}</td><td>${f(r.visceral, 0)}</td><td>${f(r.muscle)}</td><td>${f(r.water)}</td><td>${f(r.bone)}</td><td>${f(r.bmr, 0)}</td><td>${f(r.imp, 0)}</td><td>${r.src === 'bluetooth' ? '蓝牙' : '云端'}</td></tr>`).join('');
+}
+
+function render() {
+  document.querySelectorAll('.filters button[data-range]').forEach(b => b.setAttribute('aria-pressed', b.dataset.range === range));
+  document.querySelectorAll('.filters button[data-tod]').forEach(b => b.setAttribute('aria-pressed', b.dataset.tod === tod));
+  const rows = inRange(ok);
+  document.getElementById('rangeNote').textContent = rows.length ? `${fmtD(rows[0].t)} – ${fmtD(rows[rows.length - 1].t)}` : '';
+  tiles(); Object.values(METRICS).forEach(chart); insights(); recordTable();
+}
+
+document.getElementById('sub').textContent = ok.length
+  ? `${ALL.length} 条测量 · ${fmtD(ALL[0].t)} 至 ${fmtD(ALL[ALL.length - 1].t)} · 有品云端 ${ALL.filter(r => r.src === 'cloud').length} 条 + 本机蓝牙 ${ALL.filter(r => r.src === 'bluetooth').length} 条`
+  : '还没有数据';
+document.querySelectorAll('.filters button[data-range]').forEach(b => b.addEventListener('click', () => { range = b.dataset.range; try { localStorage.setItem('range', range); } catch {} render(); }));
+document.querySelectorAll('.filters button[data-tod]').forEach(b => b.addEventListener('click', () => { tod = b.dataset.tod; try { localStorage.setItem('tod', tod); } catch {} render(); }));
+try { range = localStorage.getItem('range') || 'all'; tod = localStorage.getItem('tod') || 'all'; } catch {}
+yearTable(); todTable();
+if (ok.length) render();
+let rz; addEventListener('resize', () => { clearTimeout(rz); rz = setTimeout(() => Object.values(METRICS).forEach(chart), 150); });
+</script>
+</body>
+</html>

@@ -11,6 +11,7 @@ import os
 import statistics
 
 from xds_bin2fit import TZ, parse_points
+from xds_body import load as load_body
 from xds_fatigue import assess as fatigue
 from xds_hrq import clean as clean_hr, load_config as load_hrq_config
 from xds_places import assign_names
@@ -174,7 +175,9 @@ def build(rides, fixes, raw_dir, out_html=OUT_HTML):
         if r["id"] in reviews:
             r["review"] = reviews[r["id"]]
     payload = json.dumps(dict(generated=datetime.datetime.now(TZ).strftime("%Y-%m-%d %H:%M"), rides=data,
-                              segments=segdefs, fatigue=fatigue(data)),
+                              segments=segdefs, fatigue=fatigue(data),
+                              body=[[b['t'], b['tod'], b['weight'], b['fat_kg'], b['lean_kg']]
+                                    for b in load_body() if data and b['t'] >= data[0]['start'] - 400 * 86400]),
                          ensure_ascii=False, separators=(",", ":"))
     with open(TEMPLATE, encoding="utf-8") as f:
         html = f.read().replace("/*__DATA__*/null", payload)

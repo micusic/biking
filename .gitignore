@@ -9,3 +9,11 @@ __pycache__/
 *.tmp
 *.part
 .claude/settings.local.json
+
+# 有品体脂秤：登录会话和含手机号的云端原始返回绝不能提交；其余是可重新生成的产物或本机二进制
+picooc/session.json
+picooc/cloud_raw.json
+picooc/picooc.exe
+picooc/data.json
+picooc/report.html
+picooc/weights.log
