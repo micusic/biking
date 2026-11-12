@@ -1,0 +1,308 @@
+{
+ "id": "dfb22772b7b298387cdfcbef111488c5",
+ "when": "2026-11-12 08:43 周四",
+ "title": "上班通勤",
+ "start": 1794444180,
+ "written": "2026-11-12 20:39",
+ "overall": "上班 45:48、16.7 km，均速 22.1 km/h（基线 22.4），平均功率 95 W（基线 97 W），爬升 49 m，节奏和平时基本一致。气温只有约 4°C（体感 2°C），比基线低近 6°C。这次心率数据不可信（约 21% 的片段因骤降、信号不稳被剔除），不据此评价心肺；出门前记得把心率带电极打湿、系紧，天冷时尤其容易接触不良。疲劳信号全部正常，近 7 天骑了 3 天，训练量约为峰值的 90%，节奏很好，继续保持。体重已 50 天没称，建议每周固定一天（最好晚上同一时段）称一次。气温低于 10°C，注意手、耳、膝盖保暖，出门后先慢热身；晚上睡够、多喝水。如有胸闷、心慌、头晕请立即停骑就医。",
+ "climb": "用时 5:43，平均 105 W，前半段 97 W、后半段 114 W，做到了“前缓后快”，两段都落在目标区间内；踏频 78，比目标（前 85–90、后 80–85）偏低。比最近 5 次中位数（5:05、122 W）慢了约 38 秒、功率低 17 W，考虑 4°C 的低温和今天刻意压着骑，问题不大。心率数据不可信，不评价坡顶心率。下次建议换轻一档，把前半段踏频提到 85 以上，天冷时更要靠高踏频热身，后半段再把功率加到 115–120 W。",
+ "flat": "丈八东路 2:19，平均 127 W，踏频 81，在平时 120–130 W、踏频 80–90 的目标内，属于稳定的非强度日；用时排第 24，不是个人纪录（最佳 1:53），比最近 5 次中位数（2:07、138 W）慢，主要是功率低了约 11 W。上一次强度日是 11 月 9 日，一周内已有，这周不用再加。心率数据不可信，不评价。",
+ "data": {
+  "id": "dfb22772b7b298387cdfcbef111488c5",
+  "when": "2026-11-12 08:43 周四",
+  "title": "上班通勤",
+  "direction": "上班",
+  "commute": true,
+  "ride": {
+   "distance_km": 16.7,
+   "moving_time": "45:48",
+   "avg_speed_kmh": 22.1,
+   "max_speed_kmh": 39.2,
+   "avg_power": 95,
+   "max_power": 312,
+   "avg_hr": 149,
+   "max_hr": 179,
+   "cadence": 76,
+   "climb_m": 49,
+   "kcal": 282,
+   "best_1min_power": 158,
+   "best_5min_power": 108,
+   "same_power_hr_at_100w": null,
+   "red_light_hr_recovery": null,
+   "red_light_stops_measured": null
+  },
+  "hr_quality": {
+   "status": "suspect",
+   "pct": 20.7,
+   "why": [
+    "骤降",
+    "信号不稳"
+   ],
+   "segs": [
+    [
+     1.58,
+     1.73
+    ],
+    [
+     1.82,
+     1.94
+    ],
+    [
+     1.97,
+     2.22
+    ],
+    [
+     2.24,
+     2.45
+    ],
+    [
+     3.94,
+     4.04
+    ],
+    [
+     4.06,
+     4.22
+    ],
+    [
+     4.24,
+     4.47
+    ],
+    [
+     4.52,
+     4.8
+    ],
+    [
+     4.81,
+     4.85
+    ],
+    [
+     5.31,
+     5.41
+    ],
+    [
+     5.42,
+     5.57
+    ],
+    [
+     5.59,
+     5.79
+    ],
+    [
+     5.8,
+     6.0
+    ],
+    [
+     6.76,
+     6.87
+    ],
+    [
+     6.88,
+     7.06
+    ],
+    [
+     7.07,
+     7.3
+    ],
+    [
+     7.46,
+     8.63
+    ]
+   ]
+  },
+  "weather": {
+   "temp": 4.1,
+   "feels": 1.9,
+   "rh": 86,
+   "wind": 3,
+   "source": "Open-Meteo 西安市区逐小时（骑行时段平均）",
+   "baseline_temperature": 9.7,
+   "expected_same_power_hr_shift_from_temperature": -1.9,
+   "rule": "同样功率和训练量下，气温每高 10°C 心率约高 3.4 bpm（±1.3）；气温对红灯心率恢复、路段用时、骑行功率没有可测出的影响"
+  },
+  "baseline_last_8_same_direction": {
+   "n": 8,
+   "speed": 22.4,
+   "power": 97.0,
+   "same_power_hr": 148.5,
+   "red_light_hr_recovery": 16.8,
+   "temperature": 9.7
+  },
+  "segments": [
+   {
+    "id": "home-climb",
+    "name": "出门爬坡（南三环路口之后）",
+    "note": "上班方向，出门后约 1.2 km 缓坡，平均 2.4%，几乎不停车",
+    "targets": [
+     {
+      "label": "前半段",
+      "power": "90–100 W",
+      "text": "踏频 85–90，轻档先热身"
+     },
+     {
+      "label": "后半段",
+      "power": "110–120 W",
+      "text": "踏频 80–85，腿热了再加力"
+     }
+    ],
+    "hr_note": "心率只看上限：坡顶约 150，超过 155 就收一点",
+    "hard_min_power": null,
+    "passed": true,
+    "total_passes": 39,
+    "time": "5:43",
+    "seconds": 343,
+    "rank": 28,
+    "personal_record": false,
+    "speed_kmh": 12.7,
+    "power": 105,
+    "first_half_power": 97,
+    "second_half_power": 114,
+    "cadence": 78,
+    "hr_avg": null,
+    "hr_end": null,
+    "same_power_end_hr": null,
+    "hard_day": false,
+    "recent_5_median": {
+     "time": "5:05",
+     "power": 122,
+     "cadence": 78,
+     "hr_end": 149.5
+    },
+    "best_time": "4:17"
+   },
+   {
+    "id": "zhangba-east",
+    "name": "丈八东路（无红绿灯段）",
+    "note": "上班方向，自东向西，约 940 m，平路",
+    "targets": [
+     {
+      "label": "平时",
+      "power": "120–130 W",
+      "text": "踏频 80–90，平稳输出"
+     },
+     {
+      "label": "强度日（每周一次）",
+      "power": "170–190 W",
+      "text": "踏频 80–90，坐着骑，从头稳到尾"
+     }
+    ],
+    "hr_note": "心率只看上限：强度日结尾 165–170 正常，超过 175 就收一点",
+    "hard_min_power": 160,
+    "passed": true,
+    "total_passes": 40,
+    "last_hard_day": "2026-11-09",
+    "time": "2:19",
+    "seconds": 139,
+    "rank": 24,
+    "personal_record": false,
+    "speed_kmh": 24.5,
+    "power": 127,
+    "first_half_power": null,
+    "second_half_power": null,
+    "cadence": 81,
+    "hr_avg": null,
+    "hr_end": null,
+    "same_power_end_hr": null,
+    "hard_day": false,
+    "recent_5_median": {
+     "time": "2:07",
+     "power": 138,
+     "cadence": 82,
+     "hr_end": 164.5
+    },
+    "best_time": "1:53"
+   }
+  ],
+  "training": {
+   "load_now": 131,
+   "load_peak": 146,
+   "load_peak_date": "2026-06-11",
+   "load_pct_of_peak": 90,
+   "days_since_previous_ride": 2.7,
+   "riding_days_last_7": 3,
+   "riding_days_last_14": 5
+  },
+  "fatigue": {
+   "level": "正常",
+   "flags": 0,
+   "advice": "没有疲劳信号，按现在的节奏骑。",
+   "signals": [
+    {
+     "key": "hr",
+     "name": "同功率心率",
+     "flag": false,
+     "rides": [
+      {
+       "when": "11-05 08:44",
+       "direction": "上班",
+       "value": 148.7,
+       "baseline": 148.0,
+       "delta": 0.6
+      },
+      {
+       "when": "11-05 16:56",
+       "direction": "下班",
+       "value": 145.5,
+       "baseline": 144.6,
+       "delta": 0.9
+      },
+      {
+       "when": "11-09 16:56",
+       "direction": "下班",
+       "value": 145.4,
+       "baseline": 143.1,
+       "delta": 2.3
+      }
+     ],
+     "detail": "最近 3 次可信通勤里 0 次比自己的基线高 5 bpm 以上（已扣气温）"
+    },
+    {
+     "key": "hrr",
+     "name": "红灯心率恢复",
+     "flag": false,
+     "now": 16,
+     "baseline": 19.5,
+     "detail": "最近 3 次中位数 16，之前 20（-4 bpm）"
+    },
+    {
+     "key": "ramp",
+     "name": "加量速度",
+     "flag": false,
+     "week_kj": 1179,
+     "prev_4wk_avg_kj": 1170,
+     "prev_26wk_max_kj": 2100,
+     "detail": "近 7 天 1179 kJ，之前 4 周平均每周 1170 kJ，之前半年最多一周 2100 kJ"
+    },
+    {
+     "key": "streak",
+     "name": "连续骑行",
+     "flag": false,
+     "days": 1,
+     "detail": "已连续骑 1 天"
+    }
+   ],
+   "as_of": "2026-11-12 09:36"
+  },
+  "body": {
+   "last_weighed": "2026-09-23 18:20",
+   "time_of_day": "evening",
+   "days_since": 50,
+   "weight_kg": 72.2,
+   "change_30d_kg": 0.2,
+   "change_90d_kg": -0.7,
+   "fat_kg": 10.63,
+   "fat_pct": 14.7,
+   "lean_kg": 61.67,
+   "note": "体重来自有品体脂秤（同一时段取近 7 天中位数）。体脂、去脂体重是秤的估算值，单次误差约 ±2 个百分点，只看几周以上的趋势；早晚不能混比。超过 14 天没称时不要据此评价体重变化。"
+  },
+  "previous_reviews": [
+   {
+    "when": "2026-11-09 09:02 周一",
+    "overall": "上班 46 分钟、16.8 km，均速 22.2 km/h，接近最近 8 次中位数（22.6），平均功率 95 W 与基线 97 W 相当，爬升 57 m。气温约 4°C（体感 1°C），比基线低 6°C，天气明显转冷。这次心率数据不可信（超过合理上限的片段已剔除，约在 16 km 附近），不据此评价心肺，也没有可用的"
+   },
+   {
+    "when": "2026-11-09 16:56 周一",
+    "overall": "下班 48.5 分钟、17.3 km，均速 21.6 km/h 略快于基线 21.2，平均功率 116 W 高于基线 107.5 W，爬升 91 m。气温约 10°C（体感 7°C），比基线低约 6°C，按气温预计同功率心率应低约 2.2 bpm。同功率心率 145.4，比基线 146.1 低 0.7，扣除气温后相当于"
+   }
+  ]
+ }
+}
