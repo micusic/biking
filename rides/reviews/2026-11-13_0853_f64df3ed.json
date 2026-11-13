@@ -1,0 +1,233 @@
+{
+ "id": "f64df3ed974c7e46b0ccc953189d3cf7",
+ "when": "2026-11-13 08:53 周五",
+ "title": "上班通勤",
+ "start": 1794531180,
+ "written": "2026-11-13 20:44",
+ "overall": "上班 50:02、17.02 km，均速 20.8 km/h（基线 22.2 偏慢），平均功率 86 W（基线 96 W），今天整体骑得偏轻松。气温约 6°C（体感 4°C），比基线低约 3°C，预计同功率心率偏低约 1 bpm；同功率心率 143.4，比基线 146.6 低 3.2，扣掉气温后仍低约 2 bpm，属于正常波动内的小幅好转，别过度解读。疲劳信号 0 项，状态正常，近 7 天 3 个骑行日、训练量接近峰值，节奏不错。天冷注意保暖手、耳、膝盖，出门后先慢热身。体重已 51 天没称（上次 9/23），建议每周固定一天称一次。",
+ "climb": "这段 5:30，排名 25，比最近 5 次中位数（5:05）慢。功率 107 W 低于近期的 121 W，且前半段 111 W、后半段 104 W，和“前缓后快”正好相反；踏频 73 也低于目标的 80–90。坡顶心率 145，远低于 155 上限，说明还有余量。下次前半段压到 90–100 W、踏频提到 85 左右热身，后半段再加到 110–120 W。天冷更要这样做。",
+ "flat": "丈八东路 2:18，排名 24，功率 118 W，略低于平时 120–130 W 的目标，踏频 80 在范围内，结束心率 149，很轻松。不是强度日，也不是个人纪录（最佳 1:53）。11/09 刚做过强度日，这周不用再加，下次平时日把功率稳到 125 W 左右即可。",
+ "data": {
+  "id": "f64df3ed974c7e46b0ccc953189d3cf7",
+  "when": "2026-11-13 08:53 周五",
+  "title": "上班通勤",
+  "direction": "上班",
+  "commute": true,
+  "ride": {
+   "distance_km": 17.02,
+   "moving_time": "50:02",
+   "avg_speed_kmh": 20.8,
+   "max_speed_kmh": 38.4,
+   "avg_power": 86,
+   "max_power": 362,
+   "avg_hr": 139,
+   "max_hr": 155,
+   "cadence": 73,
+   "climb_m": 52,
+   "kcal": 280,
+   "best_1min_power": 156,
+   "best_5min_power": 111,
+   "same_power_hr_at_100w": 143.4,
+   "red_light_hr_recovery": null,
+   "red_light_stops_measured": null
+  },
+  "hr_quality": {
+   "status": "ok"
+  },
+  "weather": {
+   "temp": 6.1,
+   "feels": 4.4,
+   "rh": 88,
+   "wind": 2,
+   "source": "Open-Meteo 西安市区逐小时（骑行时段平均）",
+   "baseline_temperature": 9.0,
+   "expected_same_power_hr_shift_from_temperature": -1.0,
+   "rule": "同样功率和训练量下，气温每高 10°C 心率约高 3.4 bpm（±1.3）；气温对红灯心率恢复、路段用时、骑行功率没有可测出的影响"
+  },
+  "baseline_last_8_same_direction": {
+   "n": 8,
+   "speed": 22.2,
+   "power": 96.0,
+   "same_power_hr": 146.6,
+   "red_light_hr_recovery": 18.0,
+   "temperature": 9.0
+  },
+  "segments": [
+   {
+    "id": "home-climb",
+    "name": "出门爬坡（南三环路口之后）",
+    "note": "上班方向，出门后约 1.2 km 缓坡，平均 2.4%，几乎不停车",
+    "targets": [
+     {
+      "label": "前半段",
+      "power": "90–100 W",
+      "text": "踏频 85–90，轻档先热身"
+     },
+     {
+      "label": "后半段",
+      "power": "110–120 W",
+      "text": "踏频 80–85，腿热了再加力"
+     }
+    ],
+    "hr_note": "心率只看上限：坡顶约 150，超过 155 就收一点",
+    "hard_min_power": null,
+    "passed": true,
+    "total_passes": 40,
+    "time": "5:30",
+    "seconds": 330,
+    "rank": 25,
+    "personal_record": false,
+    "speed_kmh": 13.1,
+    "power": 107,
+    "first_half_power": 111,
+    "second_half_power": 104,
+    "cadence": 73,
+    "hr_avg": 144,
+    "hr_end": 145,
+    "same_power_end_hr": 144.5,
+    "hard_day": false,
+    "recent_5_median": {
+     "time": "5:05",
+     "power": 121,
+     "cadence": 78,
+     "hr_end": 153
+    },
+    "best_time": "4:17"
+   },
+   {
+    "id": "zhangba-east",
+    "name": "丈八东路（无红绿灯段）",
+    "note": "上班方向，自东向西，约 940 m，平路",
+    "targets": [
+     {
+      "label": "平时",
+      "power": "120–130 W",
+      "text": "踏频 80–90，平稳输出"
+     },
+     {
+      "label": "强度日（每周一次）",
+      "power": "170–190 W",
+      "text": "踏频 80–90，坐着骑，从头稳到尾"
+     }
+    ],
+    "hr_note": "心率只看上限：强度日结尾 165–170 正常，超过 175 就收一点",
+    "hard_min_power": 160,
+    "passed": true,
+    "total_passes": 41,
+    "last_hard_day": "2026-11-09",
+    "time": "2:18",
+    "seconds": 138,
+    "rank": 24,
+    "personal_record": false,
+    "speed_kmh": 24.7,
+    "power": 118,
+    "first_half_power": null,
+    "second_half_power": null,
+    "cadence": 80,
+    "hr_avg": 150,
+    "hr_end": 149,
+    "same_power_end_hr": 146.8,
+    "hard_day": false,
+    "recent_5_median": {
+     "time": "2:14",
+     "power": 128,
+     "cadence": 81,
+     "hr_end": 171
+    },
+    "best_time": "1:53"
+   }
+  ],
+  "training": {
+   "load_now": 141,
+   "load_peak": 146,
+   "load_peak_date": "2026-06-11",
+   "load_pct_of_peak": 97,
+   "days_since_previous_ride": 0.7,
+   "riding_days_last_7": 3,
+   "riding_days_last_14": 5
+  },
+  "fatigue": {
+   "level": "正常",
+   "flags": 0,
+   "advice": "没有疲劳信号，按现在的节奏骑。",
+   "signals": [
+    {
+     "key": "hr",
+     "name": "同功率心率",
+     "flag": false,
+     "rides": [
+      {
+       "when": "11-09 16:56",
+       "direction": "下班",
+       "value": 145.4,
+       "baseline": 143.1,
+       "delta": 2.3
+      },
+      {
+       "when": "11-12 16:57",
+       "direction": "下班",
+       "value": 145.9,
+       "baseline": 144.8,
+       "delta": 1.0
+      },
+      {
+       "when": "11-13 08:53",
+       "direction": "上班",
+       "value": 143.4,
+       "baseline": 147.3,
+       "delta": -3.9
+      }
+     ],
+     "detail": "最近 3 次可信通勤里 0 次比自己的基线高 5 bpm 以上（已扣气温）"
+    },
+    {
+     "key": "hrr",
+     "name": "红灯心率恢复",
+     "flag": false,
+     "now": 16,
+     "baseline": 19.5,
+     "detail": "最近 3 次中位数 16，之前 20（-4 bpm）"
+    },
+    {
+     "key": "ramp",
+     "name": "加量速度",
+     "flag": false,
+     "week_kj": 1424,
+     "prev_4wk_avg_kj": 1173,
+     "prev_26wk_max_kj": 2100,
+     "detail": "近 7 天 1424 kJ，之前 4 周平均每周 1173 kJ，之前半年最多一周 2100 kJ"
+    },
+    {
+     "key": "streak",
+     "name": "连续骑行",
+     "flag": false,
+     "days": 2,
+     "detail": "已连续骑 2 天"
+    }
+   ],
+   "as_of": "2026-11-13 09:49"
+  },
+  "body": {
+   "last_weighed": "2026-09-23 18:20",
+   "time_of_day": "evening",
+   "days_since": 51,
+   "weight_kg": 72.2,
+   "change_30d_kg": 0.2,
+   "change_90d_kg": -0.7,
+   "fat_kg": 10.63,
+   "fat_pct": 14.7,
+   "lean_kg": 61.67,
+   "note": "体重来自有品体脂秤（同一时段取近 7 天中位数）。体脂、去脂体重是秤的估算值，单次误差约 ±2 个百分点，只看几周以上的趋势；早晚不能混比。超过 14 天没称时不要据此评价体重变化。"
+  },
+  "previous_reviews": [
+   {
+    "when": "2026-11-12 08:43 周四",
+    "overall": "上班 45:48、16.7 km，均速 22.1 km/h（基线 22.4），平均功率 95 W（基线 97 W），爬升 49 m，节奏和平时基本一致。气温只有约 4°C（体感 2°C），比基线低近 6°C。这次心率数据不可信（约 21% 的片段因骤降、信号不稳被剔除），不据此评价心肺；出门前记得把心率带电极打湿、系紧"
+   },
+   {
+    "when": "2026-11-12 16:57 周四",
+    "overall": "下班 51:14、17.77 km，均速 21.0 km/h（基线 21.2），平均功率 103 W（基线 107.5 W），爬升 78 m，最高心率 167，没有触线。气温约 13°C（体感 12°C），比基线低约 2.4°C，预计同功率心率低约 0.8 bpm。同功率心率 145.9，比基线 145.5 高 0.4"
+   }
+  ]
+ }
+}

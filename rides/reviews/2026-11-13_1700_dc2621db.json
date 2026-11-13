@@ -1,0 +1,276 @@
+{
+ "id": "dc2621db9c3597c324f97ad658fa04ea",
+ "when": "2026-11-13 17:00 周五",
+ "title": "下班通勤",
+ "start": 1794560400,
+ "written": "2026-11-13 20:44",
+ "overall": "下班 52:00、17.65 km，均速 20.8 km/h（基线 21.1），平均功率 99 W（基线 107.5 W），爬升 80 m，节奏略轻。气温约 14°C，与基线持平，无需气温校正。这次心率数据不可信（约 14% 片段掉线、信号不稳），不据此评价心肺，最高心率 169 也不作参考；出门前请把心率带电极打湿、系紧。疲劳信号 0 项，今天是连续第 2 天骑行，近 7 天做功 1728 kJ，较前 4 周均值明显增加但低于半年峰值，注意今晚睡够、补充蛋白质和水分，周末可以休息一天。体重已 51 天没称，建议这周称一次。如有胸闷、心慌、头晕应停止骑行并就医。",
+ "climb": "下班方向不经过这段。",
+ "flat": "下班方向不经过这段。",
+ "data": {
+  "id": "dc2621db9c3597c324f97ad658fa04ea",
+  "when": "2026-11-13 17:00 周五",
+  "title": "下班通勤",
+  "direction": "下班",
+  "commute": true,
+  "ride": {
+   "distance_km": 17.65,
+   "moving_time": "52:00",
+   "avg_speed_kmh": 20.8,
+   "max_speed_kmh": 42.4,
+   "avg_power": 99,
+   "max_power": 453,
+   "avg_hr": 142,
+   "max_hr": 169,
+   "cadence": 75,
+   "climb_m": 80,
+   "kcal": 333,
+   "best_1min_power": 174,
+   "best_5min_power": 130,
+   "same_power_hr_at_100w": null,
+   "red_light_hr_recovery": null,
+   "red_light_stops_measured": null
+  },
+  "hr_quality": {
+   "status": "suspect",
+   "pct": 14.0,
+   "why": [
+    "掉线",
+    "信号不稳"
+   ],
+   "segs": [
+    [
+     2.87,
+     2.97
+    ],
+    [
+     2.99,
+     3.37
+    ],
+    [
+     3.39,
+     3.45
+    ],
+    [
+     3.47,
+     3.52
+    ],
+    [
+     3.53,
+     3.63
+    ],
+    [
+     3.64,
+     3.79
+    ],
+    [
+     3.99,
+     4.09
+    ],
+    [
+     4.1,
+     4.17
+    ],
+    [
+     4.2,
+     4.4
+    ],
+    [
+     4.41,
+     4.57
+    ],
+    [
+     4.58,
+     4.87
+    ],
+    [
+     4.91,
+     4.97
+    ],
+    [
+     4.98,
+     5.08
+    ],
+    [
+     5.11,
+     5.27
+    ],
+    [
+     5.28,
+     5.35
+    ],
+    [
+     5.72,
+     5.78
+    ],
+    [
+     5.8,
+     5.88
+    ],
+    [
+     5.89,
+     5.98
+    ],
+    [
+     5.99,
+     6.16
+    ]
+   ]
+  },
+  "weather": {
+   "temp": 14.3,
+   "feels": 13.5,
+   "rh": 64,
+   "wind": 1,
+   "source": "Open-Meteo 西安市区逐小时（骑行时段平均）",
+   "baseline_temperature": 14.3,
+   "expected_same_power_hr_shift_from_temperature": 0.0,
+   "rule": "同样功率和训练量下，气温每高 10°C 心率约高 3.4 bpm（±1.3）；气温对红灯心率恢复、路段用时、骑行功率没有可测出的影响"
+  },
+  "baseline_last_8_same_direction": {
+   "n": 8,
+   "speed": 21.1,
+   "power": 107.5,
+   "same_power_hr": 145.5,
+   "red_light_hr_recovery": 23.0,
+   "temperature": 14.3
+  },
+  "segments": [
+   {
+    "id": "home-climb",
+    "name": "出门爬坡（南三环路口之后）",
+    "note": "上班方向，出门后约 1.2 km 缓坡，平均 2.4%，几乎不停车",
+    "targets": [
+     {
+      "label": "前半段",
+      "power": "90–100 W",
+      "text": "踏频 85–90，轻档先热身"
+     },
+     {
+      "label": "后半段",
+      "power": "110–120 W",
+      "text": "踏频 80–85，腿热了再加力"
+     }
+    ],
+    "hr_note": "心率只看上限：坡顶约 150，超过 155 就收一点",
+    "hard_min_power": null,
+    "passed": false,
+    "total_passes": 40
+   },
+   {
+    "id": "zhangba-east",
+    "name": "丈八东路（无红绿灯段）",
+    "note": "上班方向，自东向西，约 940 m，平路",
+    "targets": [
+     {
+      "label": "平时",
+      "power": "120–130 W",
+      "text": "踏频 80–90，平稳输出"
+     },
+     {
+      "label": "强度日（每周一次）",
+      "power": "170–190 W",
+      "text": "踏频 80–90，坐着骑，从头稳到尾"
+     }
+    ],
+    "hr_note": "心率只看上限：强度日结尾 165–170 正常，超过 175 就收一点",
+    "hard_min_power": 160,
+    "passed": false,
+    "total_passes": 41,
+    "last_hard_day": "2026-11-09"
+   }
+  ],
+  "training": {
+   "load_now": 148,
+   "load_peak": 148,
+   "load_peak_date": "2026-11-13",
+   "load_pct_of_peak": 100,
+   "days_since_previous_ride": 0.0,
+   "riding_days_last_7": 3,
+   "riding_days_last_14": 5
+  },
+  "fatigue": {
+   "level": "正常",
+   "flags": 0,
+   "advice": "没有疲劳信号，按现在的节奏骑。",
+   "signals": [
+    {
+     "key": "hr",
+     "name": "同功率心率",
+     "flag": false,
+     "rides": [
+      {
+       "when": "11-09 16:56",
+       "direction": "下班",
+       "value": 145.4,
+       "baseline": 143.1,
+       "delta": 2.3
+      },
+      {
+       "when": "11-12 16:57",
+       "direction": "下班",
+       "value": 145.9,
+       "baseline": 144.8,
+       "delta": 1.0
+      },
+      {
+       "when": "11-13 08:53",
+       "direction": "上班",
+       "value": 143.4,
+       "baseline": 147.3,
+       "delta": -3.9
+      }
+     ],
+     "detail": "最近 3 次可信通勤里 0 次比自己的基线高 5 bpm 以上（已扣气温）"
+    },
+    {
+     "key": "hrr",
+     "name": "红灯心率恢复",
+     "flag": false,
+     "now": 16,
+     "baseline": 19.5,
+     "detail": "最近 3 次中位数 16，之前 20（-4 bpm）"
+    },
+    {
+     "key": "ramp",
+     "name": "加量速度",
+     "flag": false,
+     "week_kj": 1728,
+     "prev_4wk_avg_kj": 1173,
+     "prev_26wk_max_kj": 2355,
+     "detail": "近 7 天 1728 kJ，之前 4 周平均每周 1173 kJ，之前半年最多一周 2355 kJ"
+    },
+    {
+     "key": "streak",
+     "name": "连续骑行",
+     "flag": false,
+     "days": 2,
+     "detail": "已连续骑 2 天"
+    }
+   ],
+   "as_of": "2026-11-13 17:58"
+  },
+  "body": {
+   "last_weighed": "2026-09-23 18:20",
+   "time_of_day": "evening",
+   "days_since": 51,
+   "weight_kg": 72.2,
+   "change_30d_kg": 0.2,
+   "change_90d_kg": -0.7,
+   "fat_kg": 10.63,
+   "fat_pct": 14.7,
+   "lean_kg": 61.67,
+   "note": "体重来自有品体脂秤（同一时段取近 7 天中位数）。体脂、去脂体重是秤的估算值，单次误差约 ±2 个百分点，只看几周以上的趋势；早晚不能混比。超过 14 天没称时不要据此评价体重变化。"
+  },
+  "previous_reviews": [
+   {
+    "when": "2026-11-12 08:43 周四",
+    "overall": "上班 45:48、16.7 km，均速 22.1 km/h（基线 22.4），平均功率 95 W（基线 97 W），爬升 49 m，节奏和平时基本一致。气温只有约 4°C（体感 2°C），比基线低近 6°C。这次心率数据不可信（约 21% 的片段因骤降、信号不稳被剔除），不据此评价心肺；出门前记得把心率带电极打湿、系紧"
+   },
+   {
+    "when": "2026-11-12 16:57 周四",
+    "overall": "下班 51:14、17.77 km，均速 21.0 km/h（基线 21.2），平均功率 103 W（基线 107.5 W），爬升 78 m，最高心率 167，没有触线。气温约 13°C（体感 12°C），比基线低约 2.4°C，预计同功率心率低约 0.8 bpm。同功率心率 145.9，比基线 145.5 高 0.4"
+   }
+  ]
+ }
+}
