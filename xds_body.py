@@ -6,6 +6,7 @@ abnormal=1 or an excluded_reason are dropped. Body fat / lean mass are the scale
 weight is the reliable number. Bluetooth rows carry weight (and impedance) only.
 """
 import csv
+import json
 import datetime
 import os
 import shutil
@@ -58,6 +59,27 @@ def load():
                 continue
             out.append(dict(t=int(r["unix_time"]), tod=r["time_of_day"], weight=_f(r["weight_kg"]),
                             fat_pct=_f(r.get("fat_pct")), fat_kg=_f(r.get("fat_kg")), lean_kg=_f(r.get("lean_kg"))))
+    # Bluetooth readings (weigh.bat) land in weights.csv first; body_data.csv only has them after report.mjs runs,
+    # so take any that are missing from it straight away (exclude.json still applies)
+    seen = [x["t"] for x in out]
+    excluded = set()
+    try:
+        with open(os.path.join(PICOOC, "exclude.json"), encoding="utf-8") as f:
+            excluded = {e["time"][:16] for e in json.load(f)}
+    except (OSError, ValueError, KeyError):
+        pass
+    try:
+        with open(os.path.join(PICOOC, "weights.csv"), encoding="utf-8-sig") as f:
+            for r in csv.DictReader(f):
+                when = datetime.datetime.strptime(r["time"][:19], "%Y-%m-%d %H:%M:%S").replace(tzinfo=TZ)
+                t, w = int(when.timestamp()), _f(r.get("weight_kg"))
+                if not w or r["time"][:16] in excluded or any(abs(t - s) < 600 for s in seen):
+                    continue
+                h = when.hour
+                out.append(dict(t=t, tod="morning" if 5 <= h < 11 else "evening" if h >= 16 else "other",
+                                weight=w, fat_pct=None, fat_kg=None, lean_kg=None))
+    except (OSError, ValueError, KeyError):
+        pass
     return sorted(out, key=lambda x: x["t"])
 
 

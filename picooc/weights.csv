@@ -1,3 +1,4 @@
 ﻿time,weight_kg,impedance_ohm,bmi,fat_pct,water_pct,muscle_pct,bone_kg,bmr_kcal,source
 2026-11-11 20:03:12,76.55,0.0,24.2,,,,,,"scale record"
 2026-11-11 20:08:23,76.10,460.1,24.0,17.1,60.0,44.4,3.59,1732,"scale record"
+2026-11-12 18:35:01,73.95,445.8,23.3,13.9,62.6,46.9,3.63,1745,"scale record"
